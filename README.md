@@ -132,9 +132,9 @@ import derivation._, tc._, shapeless._
 
 // Provide a deriver instance for Tc[T] for all T with a shapeless Generic instance
 
-implicit def apply[T](implicit wtct: DerivedTc[T]): Deriver0[Tc, T] =
+implicit def apply[T](implicit dtct: DerivedTc[T]): Deriver0[Tc, T] =
   new Deriver0[Tc, T] {
-    def derive: Tc[T] = wtct
+    def derive: Tc[T] = dtct
   }
 
 trait DerivedTc[T] extends Tc[T]

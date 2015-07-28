@@ -17,9 +17,9 @@
 import derivation._, tc._, shapeless._
 
 package object tcderiver {
-  implicit def apply[T](implicit wtct: DerivedTc[T]): Deriver0[Tc, T] =
+  implicit def apply[T](implicit dtct: DerivedTc[T]): Deriver0[Tc, T] =
     new Deriver0[Tc, T] {
-      def derive: Tc[T] = wtct
+      def derive: Tc[T] = dtct
     }
 }
 
