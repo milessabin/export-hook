@@ -8,18 +8,18 @@ imposing heavyweight dependencies on type class providers.
 An _orphan_ type class instance is a type class instance which is defined outside its _implicit scope_. To understand
 this we first need to review a few details of how the scala compiler resolves implicit parameters ...
 
-Implicit definitions are resolved as implicit parameters in two ways,
+Implicit definitions are resolved to satisfy implicit parameters in two ways,
 
-1. a matching definition in the current or an enclosing scope or via an import.
-2. a matching definition in the _implicit scope_.
+1. by searching for a matching definition in the current or an enclosing scope or via an import.
+2. by searching for a matching definition in the _implicit scope_.
 
-The _implicit scope_ of a type `T` consists of all companion objects of the type that are associated with it. To a
+The _implicit scope_ of a type `T` consists of all companion objects of the types that are associated with it. To a
 first approximation the types associated with `T` are all the types that are mentioned in `T`. So, for example, the
 implicit scope of `Functor[List]` includes the companion object of `Functor` and the companion object of `List`. The
-full rules are more complicated and can be found in [section 7.2][sls-7.2] of the Scala Language Reference.
+full set of rules is more complicated and can be found in [section 7.2][sls-7.2] of the Scala Language Reference.
 
 When the compiler is resolving an implicit parameter it will first look for defintions using strategy (1) above:
-implicit defintions which are directly accessible in the current or an enclosing scope, or via an import, will be
+implicit defintions which are directly accessible in the current or an enclosing scope, or via an import will be
 consulted first and selected according to the [normal overload resolution rules][sls-6.26.3].
 
 The compiler will _only_ use strategy (2), searching the implicit scope, if no suitable implicit definitions are found
@@ -29,13 +29,13 @@ definitions in the implicit scope. [Eugene Yokota][eed3si9n] has an excellent wr
 
 As a general rule we prefer implicit definitions to be available without needing explicit imports so, by and large,
 it's preferable to define type class instances in the implicit scope, ie. within the companion object of the type
-class trait, or within the companion object of the type for which we're requesting the instance.
+class trait, or within the companion object of the type for which we're defining the instance.
 
 For example, given the `Functor` type class and some type `Foo`, we would prefer to define the instance `Functor[Foo]`
 in either the companion object of `Functor` or the companion object of `Foo`. In this case, whenever `Functor` and
 `Foo` are visible, `Functor[Foo]` can be implicitly resolved without any further imports.
 
-Conversely, an implicit defintion which is defined outside its implicit scope will only be resolved as an implicit
+Conversely, an implicit definition which is defined _outside_ its implicit scope will only be resolved as an implicit
 parameter if it is directly accessible, ie. if it is imported or defined in the current or an enclosing scope. This
 would be the case if the instance `Functor[Foo]` were provided by a third-party, neither in the companion object of
 `Functor` nor in the companion object of `Foo`. Type class instances defined in this way are _orphans_.
@@ -54,23 +54,23 @@ scenario we want the directly accessible local definition to trump the definitio
 
 However, these aren't the semantics we want for automatically derived type class instances. Here we want hand written
 instances, which will typically be defined in the implicit scope, to take precedence over derived instances. This
-directly conflicts with the fact that orphans must be imported.
+directly conflicts with the need to import orphans.
 
-To complicate matters still further it's common for there to be a default type class instance for a very general type
+To complicate matters still further, it's common for there to be a default type class instance for a very general type
 such as `AnyRef` or `Any`. This will typically be defined as a lowest priority instance in the companion object of the
 type class trait. We will want derived instances to have a higher priority than these very general instances.
 
-In other words, we want derived instances to have a priority inbetween hand-crafted specific instances (in the
+In other words, we want derived instances to have a priority in-between hand-crafted specific instances (in the
 implicit scope) and very general fallback instances (also in the implicit scope). This is very difficult to achieve
 with orphan instances.
 
 ## Dealing with derived orphans
 
 [shapeless][shapeless] has an evolving set of mechanisms which help to deal with this problem, but it would be even
-better if we didn't have to deal with this problem at all. One way achieve this would be for projects which provide
-type classes to include the derivation mechanism directly. Whilst this has some benefits, it forces a dependency on
-shapeless on those projects, which might be too heavyweight for them, and which might limit shapeless ability to
-evolve quickly.
+better if we didn't have to deal with it at all, by not producing orphan instances in the first place. One way of
+achieving this would be for projects which provide type classes to include the derivation mechanism directly. However,
+this forces a dependency on shapeless on those projects, which might be too heavyweight for them, and it limits
+shapeless's ability to evolve independently.
 
 This project is a proof of concept of an alternative mechanism, a _derivation hook_, which allows derived type class
 instances to be inserted into the implicit scope with the appropriate priority _without_ requiring a shapeless
@@ -87,13 +87,13 @@ trait Deriver1[F[_[_]], T[_]] {
 }
 ```
 
-Additionally, the project providing type classes, and other parties, would have to follow the following conventions
+Additionally, the project providing type classes, and other parties, would have to follow the conventions below
 ...
 
 ## As seen by the type class provider
 
-The cooperating type class provider has to include a hook for a type class deriver. That implies a dependency on this
-project, and a hook trait as part of the stack of prioritized companion object traits,
+The participating type class provider has to include a hook for a type class deriver. That implies a dependency on
+this project, and a hook trait as part of the stack of prioritized companion object traits,
 
 ```scala
 package tc
