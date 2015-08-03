@@ -17,9 +17,12 @@
 package tcuser
 
 import org.scalatest.FunSuite
-import defns._, tc._, tcderiver._
+
+import adtdefns._
 
 class DeriverTests extends FunSuite {
+  import classwithderivation._, tcderiver.exports
+
   test("Tc[Int]") {
     assert(Tc[Int].describe === "Tc[Int]")
   }
@@ -43,5 +46,24 @@ class DeriverTests extends FunSuite {
   test("Tc[Quux]") {
     assert(Tc[Quux].describe ===
       "gen(Tc[Foo] :: gen(Tc[Int] :: Default Tc[T] :: HNil) :: Tc[Baz] :: HNil)")
+  }
+}
+
+
+class SubclassTests extends FunSuite {
+  import classwithsubclasses._, externalsubclass._
+
+  test("Tc[Int]") {
+    assert(Tc[Int].describe === "Tc[Int]")
+  }
+
+  test("Tc[Foo ]") {
+    import TcSub.exports
+    assert(Tc[Foo].describe === "TcSub[Foo]")
+  }
+
+  test("Tc[Bar]") {
+    import TcExtSub.exports
+    assert(Tc[Bar].describe === "TcExtSub[Bar]")
   }
 }

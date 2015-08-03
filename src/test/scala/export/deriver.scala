@@ -14,27 +14,24 @@
  * limitations under the License.
  */
 
-import derivation._, tc._, shapeless._
+import export._, classwithderivation._
 
-package object tcderiver {
-  implicit def apply[T](implicit dtct: DerivedTc[T]): Deriver0[Tc, T] =
-    new Deriver0[Tc, T] {
-      def derive: Tc[T] = dtct
-    }
-}
+package object tcderiver extends Exporter0[DerivedTc]
 
 package tcderiver {
+  import shapeless._
+
   trait DerivedTc[T] extends Tc[T]
 
-  object DerivedTc {
+  object DerivedTc extends DerivedTc0 {
     implicit def hnil: DerivedTc[HNil] =
       new DerivedTc[HNil] {
         def describe: String = "HNil"
       }
 
-    implicit def hcons[H, T <: HList](implicit hd: Tc[H], tl: Lazy[DerivedTc[T]]): DerivedTc[H :: T] =
+    implicit def hcons[H, T <: HList](implicit hd: Lazy[Tc[H]], tl: Lazy[DerivedTc[T]]): DerivedTc[H :: T] =
       new DerivedTc[H :: T] {
-        def describe: String = s"${hd.describe} :: ${tl.value.describe}"
+        def describe: String = s"${hd.value.describe} :: ${tl.value.describe}"
       }
 
     implicit def cnil: DerivedTc[CNil] =
@@ -42,14 +39,16 @@ package tcderiver {
         def describe: String = "CNil"
       }
 
-    implicit def ccons[H, T <: Coproduct](implicit hd: Tc[H], tl: Lazy[DerivedTc[T]]): DerivedTc[H :+: T] =
+    implicit def ccons[H, T <: Coproduct](implicit hd: Lazy[Tc[H]], tl: Lazy[DerivedTc[T]]): DerivedTc[H :+: T] =
       new DerivedTc[H :+: T] {
-        def describe: String = s"${hd.describe} :+: ${tl.value.describe}"
+        def describe: String = s"${hd.value.describe} :+: ${tl.value.describe}"
       }
+  }
 
-    implicit def gen[T, R](implicit gen: Generic.Aux[T, R], mtcr: DerivedTc[R]): DerivedTc[T] =
+  trait DerivedTc0 {
+    implicit def gen[T, R](implicit gen: Generic.Aux[T, R], mtcr: Lazy[DerivedTc[R]]): DerivedTc[T] =
       new DerivedTc[T] {
-        def describe: String = s"gen(${mtcr.describe})"
+        def describe: String = s"gen(${mtcr.value.describe})"
       }
   }
 }

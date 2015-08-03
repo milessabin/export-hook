@@ -14,12 +14,21 @@
  * limitations under the License.
  */
 
-package derivation
+package adtdefns
 
-trait Deriver0[F[_], T] {
-  def derive: F[T]
+case class Foo(i: Int)
+
+case class Bar(i: Int, d: Double)
+
+case class Baz(d: Double)
+
+object Baz {
+  import classwithderivation._
+
+  implicit def bazInst: Tc[Baz] =
+    new Tc[Baz] {
+      def describe: String = "Tc[Baz]"
+    }
 }
 
-trait Deriver1[F[_[_]], T[_]] {
-  def derive: F[T]
-}
+case class Quux(foo: Foo, bar: Bar, baz: Baz)
