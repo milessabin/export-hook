@@ -1,6 +1,6 @@
 organization := "com.milessabin"
 
-name := "derivation-hook"
+name := "export-hook"
 
 scalaVersion := "2.11.7"
 
