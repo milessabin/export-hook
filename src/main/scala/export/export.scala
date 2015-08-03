@@ -73,11 +73,12 @@ class ExportMacro(val c: whitebox.Context) {
         val d = TermName(c.freshName)
 
         val td = if(kind == 0) q"type $t" else q"type $t[_]"
+        val importImpl = TermName(s"importImpl$kind")
 
         q"""
           trait $typeName extends $termName.$lpName {
             import scala.language.experimental.macros
-            implicit def $methName[$td]: $tc[$t] = macro _root_.export.ExportMacro.importImpl0[$tc, $t]
+            implicit def $methName[$td]: $tc[$t] = macro _root_.export.ExportMacro.$importImpl[$tc, $t]
           }
           object $termName {
             $lpClass
