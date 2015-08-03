@@ -188,8 +188,8 @@ import TcDeriver.exports // for derived instances
 import TcSub.exports     // for subclass instances
 ```
 
-If the type class user doesn't derived or subclass instances they simply omit the corresponding import in which case
-they will only see underived instances.
+If the type class user doesn't want derived or subclass instances they simply omit the corresponding import in which
+case they will only see underived base instances.
 
 ## Feedback wanted!
 
