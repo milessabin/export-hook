@@ -3,6 +3,8 @@
 This project is a proof of concept of minimal infrastructure to support the inclusion of derived and subclass
 instances in the implicit scope of a type class without imposing heavyweight dependencies on the type class provider.
 
+[![Build Status](https://api.travis-ci.org/milessabin/export-hook.png?branch=master)](https://travis-ci.org/milessabin/export-hook)
+
 ## What are "orphan" type class instances?
 
 An _orphan_ type class instance is a type class instance which is defined outside its _implicit scope_. To understand
@@ -196,15 +198,39 @@ case they will only see underived base instances.
 This is a proof of concept ... please create issues here or hop on the [shapeless][shapeless-gitter] or
 [cats][cats-gitter] gitter channels and let us know what you think.
 
-## Participation
+## Using export-hook
 
-The export-hook project supports the [Typelevel][typelevel] [code of conduct][codeofconduct] and wants all of its
-channels (Gitter, github, etc.) to be welcoming environments for everyone.
+Binary release artefacts are published to the [Sonatype OSS Repository Hosting service][sonatype] and synced to Maven
+Central. Snapshots of the master branch are built using [Travis CI][ci] and automatically published to the Sonatype
+OSS Snapshot repository. To include the Sonatype repositories in your SBT build you should add,
 
+```scala
+resolvers ++= Seq(
+  Resolver.sonatypeRepo("releases"),
+  Resolver.sonatypeRepo("snapshots")
+)
+```
+
+Currently Builds are only available for Scala 2.11.x. The main line of development for export-hook 1.0.0 is Scala
+2.11.7 supported via the macro paradise compiler plugin.
+
+```scala
+scalaVersion := "2.11.7"
+
+libraryDependencies ++= Seq(
+  "org.typelevel" %% "export-hook" % "1.0.0-SNAPSHOT",
+  compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
+)
+```
 
 ## Building export-hook
 
 export-hook is built with SBT 0.13.8 or later, and its master branch is built with Scala 2.11.7 by default.
+
+## Participation
+
+The export-hook project supports the [Typelevel][typelevel] [code of conduct][codeofconduct] and wants all of its
+channels (Gitter, github, etc.) to be welcoming environments for everyone.
 
 ## Contributors
 
@@ -219,3 +245,5 @@ export-hook is built with SBT 0.13.8 or later, and its master branch is built wi
 [cats-gitter]: https://gitter.im/non/cats
 [typelevel]: http://typelevel.org/
 [codeofconduct]: http://typelevel.org/conduct.html
+[sonatype]: https://oss.sonatype.org/index.html#nexus-search;quick~export-hook
+[ci]: https://travis-ci.org/milessabin/export-hook
