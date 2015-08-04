@@ -140,7 +140,7 @@ A type class deriver has to provide an exporter instance which is able to provid
 They can do that using shapeless or any other suitable mechanism,
 
 ```scala
-import export._, tc._, shapeless._
+import export._, shapeless._
 
 // Automatically derive instances of Tc[T] for all T with a shapeless
 // Generic instance
@@ -170,7 +170,7 @@ A type class subclass has to provide an exporter instance which is able to provi
 Given that the subclass instances are automatically instances of their superclasses this is trivial,
 
 ```scala
-import export._, tc._
+import export._
 
 trait TcSub[T] extends Tc[T]
 
@@ -182,10 +182,10 @@ object TcSub extends Exporter0[TcSub] {
 
 ## As seen by the type class user
 
-The type class user should import both the type class and the type class deriver.
+The type class user should import both the type class and the type class deriver or subclass,
 
 ```scala
-import tc._
+import Tc
 import TcDeriver.exports // for derived instances
 import TcSub.exports     // for subclass instances
 ```
