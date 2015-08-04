@@ -19,7 +19,7 @@ package export
 import scala.language.experimental.macros
 
 import scala.annotation.StaticAnnotation
-import scala.reflect.macros.whitebox
+import scala.reflect.macros.Context
 
 class Export0[F[_], T](val instance: F[T]) extends AnyVal
 
@@ -39,7 +39,7 @@ class exported[A] extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro ExportMacro.exportedImpl
 }
 
-class ExportMacro(val c: whitebox.Context) {
+class ExportMacro[C <: Context](val c: C) {
   import c.universe._
 
   def exportsImpl0[F[_], T](st: Tree)
@@ -58,22 +58,22 @@ class ExportMacro(val c: whitebox.Context) {
 
   def exportedImpl(annottees: Tree*): Tree = {
     val Apply(Select(New(AppliedTypeTree(_, List(tc))), _), _) = c.prefix.tree
-    val tcTpe = c.typecheck(tc, c.TYPEmode).tpe
-    val kind = tcTpe.typeParams.head.asType.typeParams.length
+    val tcTpe = c.typeCheck(q"null.asInstanceOf[$tc[Any]]", silent = true).tpe.typeConstructor
+    val kind = tcTpe.typeSymbol.asType.typeParams.head.asType.typeParams.length
     if(kind > 1)
       c.abort(c.enclosingPosition, "$tc has an unsupported kind")
 
     annottees match {
       case List(ClassDef(mods, typeName, List(), impl)) =>
-        val lpName = TypeName(c.freshName)
+        val lpName = newTypeName(c.fresh)
         val lpClass = ClassDef(mods, lpName, List(), impl)
         val termName = typeName.toTermName
-        val methName = TermName(c.freshName)
-        val t = TypeName(c.freshName)
-        val d = TermName(c.freshName)
+        val methName = newTermName(c.fresh)
+        val t = newTypeName(c.fresh)
+        val d = newTermName(c.fresh)
 
         val td = if(kind == 0) q"type $t" else q"type $t[_]"
-        val importImpl = TermName(s"importImpl$kind")
+        val importImpl = newTermName(s"importImpl$kind")
 
         q"""
           trait $typeName extends $termName.$lpName {
@@ -105,4 +105,28 @@ class ExportMacro(val c: whitebox.Context) {
 
     q"""$exporter.instance"""
   }
+}
+
+
+object ExportMacro {
+  def inst(c: Context) = new ExportMacro[c.type](c)
+
+  def exportsImpl0[F[_], T](c: Context)(st: c.Expr[F[T]])
+    (implicit fTag: c.WeakTypeTag[F[_]], tTag: c.WeakTypeTag[T]): c.Expr[Export0[F, T]] =
+      c.Expr[Export0[F, T]](inst(c).exportsImpl0[F, T](st.tree))
+
+  def exportsImpl1[F[_[_]], T[_]](c: Context)(st: c.Expr[F[T]])
+    (implicit fTag: c.WeakTypeTag[F[Any]], tTag: c.WeakTypeTag[T[_]]): c.Expr[Export1[F, T]] =
+      c.Expr[Export1[F, T]](inst(c).exportsImpl1[F, T](st.tree))
+
+  def exportedImpl(c: Context)(annottees: c.Expr[Any]*): c.Expr[Any] =
+    c.Expr[Any](inst(c).exportedImpl(annottees.map(_.tree): _*))
+
+  def importImpl0[F[_], T](c: Context)
+    (implicit fTag: c.WeakTypeTag[F[_]], tTag: c.WeakTypeTag[T]): c.Expr[F[T]] =
+      c.Expr[F[T]](inst(c).importImpl0[F, T])
+
+  def importImpl1[F[_[_]], T[_]](c: Context)
+    (implicit fTag: c.WeakTypeTag[F[Any]], tTag: c.WeakTypeTag[T[_]]): c.Expr[F[T]] =
+      c.Expr[F[T]](inst(c).importImpl1[F, T])
 }

@@ -1,6 +1,6 @@
 lazy val buildSettings = Seq(
   organization := "org.typelevel",
-  scalaVersion := "2.11.7"
+  scalaVersion := "2.10.5"
 )
 
 lazy val commonSettings = Seq(
@@ -21,6 +21,7 @@ lazy val commonSettings = Seq(
     "org.scalacheck" %% "scalacheck" % "1.12.4" % "test",
 
     "org.scala-lang" %  "scala-reflect" % scalaVersion.value % "provided",
+    "org.scalamacros" %% "quasiquotes" % "2.0.0",
 
     compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full),
     compilerPlugin("org.spire-math" %% "kind-projector" % "0.5.4")
