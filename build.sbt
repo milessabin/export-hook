@@ -1,4 +1,4 @@
-organization := "com.milessabin"
+organization := "org.typeleval"
 
 name := "export-hook"
 
