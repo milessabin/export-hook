@@ -119,7 +119,7 @@ trait Tc[T] {
   // Type class defns ...
 }
 
-object Tc extends TcDerived {
+object Tc extends TcLowPriority {
   // Instances which should be higher priority than derived
   // or subclass instances should be defined here ...
 }
@@ -145,7 +145,7 @@ import export._, tc._, shapeless._
 
 trait DerivedTc[T] extends Tc[T]
 
-object DerivedTc extends DerivedTcInstances with Exporter[DerivedTc] {
+object DerivedTc extends Exporter0[DerivedTc] {
   implicit def hnil: DerivedTc[HNil] = ...
 
   implicit def hcons[H, T <: HList]
