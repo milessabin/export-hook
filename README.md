@@ -196,6 +196,20 @@ case they will only see underived base instances.
 This is a proof of concept ... please create issues here or hop on the [shapeless][shapeless-gitter] or
 [cats][cats-gitter] gitter channels and let us know what you think.
 
+## Participation
+
+The export-hook project supports the [Typelevel][typelevel] [code of conduct][codeofconduct] and wants all of its
+channels (Gitter, github, etc.) to be welcoming environments for everyone.
+
+
+## Building export-hook
+
+export-hook is built with SBT 0.13.8 or later, and its master branch is built with Scala 2.11.7 by default.
+
+## Contributors
+
++ Your name here :-)
+
 [sls-7.2]: http://scala-lang.org/files/archive/spec/2.11/07-implicits.html#implicit-parameters
 [sls-6.26.3]: http://scala-lang.org/files/archive/spec/2.11/06-expressions.html#overloading-resolution
 [eed3si9n]: https://twitter.com/eed3si9n
@@ -203,3 +217,5 @@ This is a proof of concept ... please create issues here or hop on the [shapeles
 [shapeless]: https://github.com/milessabin/shapeless
 [shapeless-gitter]: https://gitter.im/milessabin/shapeless
 [cats-gitter]: https://gitter.im/non/cats
+[typelevel]: http://typelevel.org/
+[codeofconduct]: http://typelevel.org/conduct.html
