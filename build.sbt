@@ -41,10 +41,12 @@ lazy val commonJvmSettings = Seq(
 
 lazy val exportHookSettings = buildSettings ++ commonSettings ++ publishSettings
 
+onLoad in Global := (onLoad in Global).value andThen (Command.process(s"project exportHookJVM", _: State))
+
 lazy val root = project.in(file("."))
   .aggregate(exportHookJS, exportHookJVM)
   .dependsOn(exportHookJS, exportHookJVM)
- .settings(exportHookSettings:_*)
+  .settings(exportHookSettings:_*)
   .settings(noPublishSettings)
 
 lazy val exportHook = crossProject.crossType(CrossType.Pure)
@@ -86,7 +88,7 @@ lazy val noPublishSettings = Seq(
   publishArtifact := false
 )
 
-addCommandAlias("validate", ";compile;test")
+addCommandAlias("validate", ";root/compile;root/test")
 
 lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies ++= Seq(

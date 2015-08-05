@@ -2,6 +2,7 @@ language: scala
 
 scala:
 - 2.11.7
+- 2.10.5
 
 jdk:
 - oraclejdk8
@@ -16,7 +17,7 @@ script:
           "${TRAVIS_BRANCH}" == "master" &&
           $(cat version.sbt) =~ "-SNAPSHOT"
     ]]; then
-      sbt ++${TRAVIS_SCALA_VERSION} validate publish ;
+      sbt ++${TRAVIS_SCALA_VERSION} validate root/publish ;
     else
       sbt ++${TRAVIS_SCALA_VERSION} validate ;
     fi
