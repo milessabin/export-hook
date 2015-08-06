@@ -107,7 +107,8 @@ class exported[A] extends StaticAnnotation {
 (value classes and macro inlining have been used to eliminate all runtime overhead relative to directly importing
 external instances).
 
-Additionally, the project providing type classes, and other parties, would have to follow the conventions below,
+Additionally, the project providing type classes, and other parties, would have to follow the conventions below (`Tc`,
+`TcSub` and `DerivedTc` are example user type classes),
 ...
 
 ## As seen by the type class provider
@@ -187,7 +188,7 @@ The type class user should import both the type class and the type class deriver
 
 ```scala
 import Tc
-import TcDeriver.exports // for derived instances
+import DeriverTc.exports // for derived instances
 import TcSub.exports     // for subclass instances
 ```
 
