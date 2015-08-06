@@ -26,8 +26,11 @@ lazy val commonSettings = Seq(
   libraryDependencies += "org.scalatest"  %%% "scalatest"  % "3.0.0-M7"  % "test",
   libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.12.4" % "test",
 
-  scmInfo := Some(ScmInfo(url("https://github.com/milessabin/export-hook"),
-    "scm:git:git@github.com:milessabin/export-hook.git"))
+  scmInfo :=
+    Some(ScmInfo(
+      url("https://github.com/milessabin/export-hook"),
+      "scm:git:git@github.com:milessabin/export-hook.git"
+    ))
 ) ++ crossVersionSharedSources ++ scalaMacroDependencies
 
 lazy val commonJsSettings = Seq(
