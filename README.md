@@ -4,6 +4,7 @@ This project is a proof of concept of minimal infrastructure to support the incl
 instances in the implicit scope of a type class without imposing heavyweight dependencies on the type class provider.
 
 [![Build Status](https://api.travis-ci.org/milessabin/export-hook.png?branch=master)](https://travis-ci.org/milessabin/export-hook)
+[![Stories in Ready](https://badge.waffle.io/milessabin/export-hook.png?label=Ready)](https://waffle.io/milessabin/export-hook)
 
 ## What are "orphan" type class instances?
 
@@ -211,8 +212,8 @@ resolvers ++= Seq(
 )
 ```
 
-Currently Builds are only available for Scala 2.11.x. The main line of development for export-hook 1.0.0 is Scala
-2.11.7 supported via the macro paradise compiler plugin.
+Builds are available for Scala 2.11.x and 2.10.x for Scala JDK and Scala.js.  The main line of development for
+export-hook 1.0.0 is Scala 2.11.7 supported via the macro paradise compiler plugin.
 
 ```scala
 scalaVersion := "2.11.7"
