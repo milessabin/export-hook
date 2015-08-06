@@ -76,6 +76,10 @@ package export {
       (implicit fTag: c.WeakTypeTag[F[Any]], tTag: c.WeakTypeTag[T[_]]): c.Expr[Export1[F, T]] =
         c.Expr[Export1[F, T]](inst(c).exportsImpl1[F, T](st.tree))
 
+    def exportsImpl00[F[_, _], T, U](c: Context)(st: c.Expr[F[T, U]])
+      (implicit fTag: c.WeakTypeTag[F[_, _]], tTag: c.WeakTypeTag[T], uTag: c.WeakTypeTag[U]): c.Expr[Export00[F, T, U]] =
+        c.Expr[Export00[F, T, U]](inst(c).exportsImpl00[F, T, U](st.tree))
+
     def exportedImpl(c: Context)(annottees: c.Expr[Any]*): c.Expr[Any] =
       c.Expr[Any](inst(c).exportedImpl(annottees.map(_.tree): _*))
 
