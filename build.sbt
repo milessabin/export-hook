@@ -39,24 +39,24 @@ lazy val commonJvmSettings = Seq(
   parallelExecution in Test := false
 )
 
-lazy val exportHookSettings = buildSettings ++ commonSettings ++ publishSettings
+lazy val coreSettings = buildSettings ++ commonSettings ++ publishSettings
 
-onLoad in Global := (onLoad in Global).value andThen (Command.process(s"project exportHookJVM", _: State))
+onLoad in Global := (onLoad in Global).value andThen (Command.process(s"project coreJVM", _: State))
 
 lazy val root = project.in(file("."))
-  .aggregate(exportHookJS, exportHookJVM)
-  .dependsOn(exportHookJS, exportHookJVM)
-  .settings(exportHookSettings:_*)
+  .aggregate(coreJS, coreJVM)
+  .dependsOn(coreJS, coreJVM)
+  .settings(coreSettings:_*)
   .settings(noPublishSettings)
 
-lazy val exportHook = crossProject.crossType(CrossType.Pure)
+lazy val core = crossProject.crossType(CrossType.Pure)
   .settings(moduleName := "export-hook")
-  .settings(exportHookSettings:_*)
+  .settings(coreSettings:_*)
   .jsSettings(commonJsSettings:_*)
   .jvmSettings(commonJvmSettings:_*)
 
-lazy val exportHookJVM = exportHook.jvm
-lazy val exportHookJS = exportHook.js
+lazy val coreJVM = core.jvm
+lazy val coreJS = core.js
 
 lazy val publishSettings = Seq(
   homepage := Some(url("https://github.com/milessabin/export-hook")),
