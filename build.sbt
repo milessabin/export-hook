@@ -1,4 +1,6 @@
+import com.typesafe.sbt.pgp.PgpKeys.publishSigned
 import org.scalajs.sbtplugin.cross.CrossProject
+import ReleaseTransformations._
 
 lazy val buildSettings = Seq(
   organization := "org.typelevel",
@@ -61,7 +63,38 @@ lazy val core = crossProject.crossType(CrossType.Pure)
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
+addCommandAlias("validate", ";root/compile;root/test")
+
+lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
+  libraryDependencies ++= Seq(
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
+    compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
+  ),
+  libraryDependencies ++= {
+    CrossVersion.partialVersion(scalaVersion.value) match {
+      // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
+      case Some((2, scalaMajor)) if scalaMajor >= 11 => Seq()
+      // in Scala 2.10, quasiquotes are provided by macro paradise
+      case Some((2, 10)) =>
+        Seq(
+              "org.scalamacros" %% "quasiquotes" % "2.0.0" cross CrossVersion.binary
+        )
+    }
+  }
+)
+
+lazy val crossVersionSharedSources: Seq[Setting[_]] =
+  Seq(Compile, Test).map { sc =>
+    (unmanagedSourceDirectories in sc) ++= {
+      (unmanagedSourceDirectories in sc ).value.map {
+        dir:File => new File(dir.getPath + "_" + scalaBinaryVersion.value)
+      }
+    }
+  }
+
 lazy val publishSettings = Seq(
+  releaseCrossBuild := true,
+  releasePublishArtifactsAction := PgpKeys.publishSigned.value,
   homepage := Some(url("https://github.com/milessabin/export-hook")),
   licenses := Seq("Apache 2" -> url("http://www.apache.org/licenses/LICENSE-2.0.txt")),
   publishMavenStyle := true,
@@ -91,34 +124,21 @@ lazy val noPublishSettings = Seq(
   publishArtifact := false
 )
 
-addCommandAlias("validate", ";root/compile;root/test")
-
-lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
-  libraryDependencies ++= Seq(
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
-    compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
-  ),
-  libraryDependencies ++= {
-    CrossVersion.partialVersion(scalaVersion.value) match {
-      // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
-      case Some((2, scalaMajor)) if scalaMajor >= 11 => Seq()
-      // in Scala 2.10, quasiquotes are provided by macro paradise
-      case Some((2, 10)) =>
-        Seq(
-              "org.scalamacros" %% "quasiquotes" % "2.0.0" cross CrossVersion.binary
-        )
-    }
-  }
+lazy val sharedReleaseProcess = Seq(
+  releaseProcess := Seq[ReleaseStep](
+    checkSnapshotDependencies,
+    inquireVersions,
+    runClean,
+    runTest,
+    setReleaseVersion,
+    commitReleaseVersion,
+    tagRelease,
+    publishArtifacts,
+    setNextVersion,
+    commitNextVersion,
+    ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
+    pushChanges)
 )
-
-lazy val crossVersionSharedSources: Seq[Setting[_]] =
-  Seq(Compile, Test).map { sc =>
-    (unmanagedSourceDirectories in sc) ++= {
-      (unmanagedSourceDirectories in sc ).value.map {
-        dir:File => new File(dir.getPath + "_" + scalaBinaryVersion.value)
-      }
-    }
-  }
 
 credentials ++= (for {
   username <- Option(System.getenv().get("SONATYPE_USERNAME"))
