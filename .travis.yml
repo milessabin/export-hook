@@ -17,7 +17,7 @@ script:
           "${TRAVIS_BRANCH}" == "master" &&
           $(cat version.sbt) =~ "-SNAPSHOT"
     ]]; then
-      sbt ++${TRAVIS_SCALA_VERSION} validate root/publish ;
+      sbt ++${TRAVIS_SCALA_VERSION} validate publish ;
     else
       sbt ++${TRAVIS_SCALA_VERSION} validate ;
     fi

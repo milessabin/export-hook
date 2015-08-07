@@ -46,8 +46,6 @@ lazy val commonJvmSettings = Seq(
 
 lazy val coreSettings = buildSettings ++ commonSettings ++ publishSettings
 
-onLoad in Global := (onLoad in Global).value andThen (Command.process(s"project coreJVM", _: State))
-
 lazy val root = project.in(file("."))
   .aggregate(coreJS, coreJVM)
   .dependsOn(coreJS, coreJVM)
@@ -63,7 +61,11 @@ lazy val core = crossProject.crossType(CrossType.Pure)
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
-addCommandAlias("validate", ";root/compile;root/test")
+addCommandAlias("validate", ";root;compile;test")
+addCommandAlias("release-all", ";root;release")
+addCommandAlias("js", ";project coreJS")
+addCommandAlias("jvm", ";project coreJVM")
+addCommandAlias("root", ";project root")
 
 lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies ++= Seq(
@@ -137,7 +139,8 @@ lazy val sharedReleaseProcess = Seq(
     setNextVersion,
     commitNextVersion,
     ReleaseStep(action = Command.process("sonatypeReleaseAll", _)),
-    pushChanges)
+    pushChanges
+  )
 )
 
 credentials ++= (for {
