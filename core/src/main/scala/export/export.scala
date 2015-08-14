@@ -21,24 +21,21 @@ import scala.language.experimental.macros
 import scala.annotation.StaticAnnotation
 import scala.reflect.macros.whitebox
 
-class Export0[F[_], T](val instance: F[T]) extends AnyVal
-
-class Export1[F[_[_]], T[_]](val instance: F[T]) extends AnyVal
-
-class Export00[F[_, _], T, U](val instance: F[T, U]) extends AnyVal
+// https://issues.scala-lang.org/browse/SI-7332
+class Export[+T](val instance: T) extends AnyVal
 
 trait Exporter0[S[_]]  {
-  implicit def exports[F[t] >: S[t], T](implicit st: S[T]): Export0[F, T] =
+  implicit def exports[F[t] >: S[t], T](implicit st: S[T]): Export[F[T]] =
     macro ExportMacro.exportsImpl0[F, T]
 }
 
 trait Exporter1[S[_[_]]]  {
-  implicit def exports[F[t[_]] >: S[t], T[_]](implicit st: S[T]): Export1[F, T] =
+  implicit def exports[F[t[_]] >: S[t], T[_]](implicit st: S[T]): Export[F[T]] =
     macro ExportMacro.exportsImpl1[F, T]
 }
 
 trait Exporter00[S[_, _]]  {
-  implicit def exports[F[t, u] >: S[t, u], T, U](implicit st: S[T, U]): Export00[F, T, U] =
+  implicit def exports[F[t, u] >: S[t, u], T, U](implicit st: S[T, U]): Export[F[T, U]] =
     macro ExportMacro.exportsImpl00[F, T, U]
 }
 
@@ -53,18 +50,18 @@ class ExportMacro0(val c: whitebox.Context) extends MacroCompat {
 
   def exportsImpl0[F[_], T](st: Tree)
     (implicit fTag: WeakTypeTag[F[_]], tTag: WeakTypeTag[T]): Tree =
-    exportsImplAux(fTag.tpe.typeConstructor, List(tTag.tpe), typeOf[Export0[Any, _]].typeConstructor, st)
+    exportsImplAux(fTag.tpe.typeConstructor, List(tTag.tpe), st)
 
   def exportsImpl1[F[_[_]], T[_]](st: Tree)
     (implicit fTag: WeakTypeTag[F[Any]], tTag: WeakTypeTag[T[_]]): Tree =
-    exportsImplAux(fTag.tpe.typeConstructor, List(tTag.tpe.typeConstructor), typeOf[Export1[Any, Any]].typeConstructor, st)
+    exportsImplAux(fTag.tpe.typeConstructor, List(tTag.tpe.typeConstructor), st)
 
   def exportsImpl00[F[_, _], T, U](st: Tree)
     (implicit fTag: WeakTypeTag[F[_, _]], tTag: WeakTypeTag[T], uTag: WeakTypeTag[U]): Tree =
-    exportsImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe), typeOf[Export00[Any, _, _]].typeConstructor, st)
+    exportsImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe), st)
 
-  def exportsImplAux(fTpe: Type, tTpes: List[Type], eTpe: Type, st: Tree): Tree = {
-    val appTpe = appliedType(eTpe, fTpe :: tTpes)
+  def exportsImplAux(fTpe: Type, tTpes: List[Type], st: Tree): Tree = {
+    val appTpe = appliedType(typeOf[Export[_]].typeConstructor, appliedType(fTpe, tTpes))
     q"""new $appTpe($st)"""
   }
 
@@ -110,16 +107,16 @@ class ExportMacro0(val c: whitebox.Context) extends MacroCompat {
   }
 
   def importImpl0[F[_], T](implicit fTag: WeakTypeTag[F[_]], tTag: WeakTypeTag[T]): Tree =
-    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe), typeOf[Export0[Any, _]].typeConstructor)
+    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe))
 
   def importImpl1[F[_[_]], T[_]](implicit fTag: WeakTypeTag[F[Any]], tTag: WeakTypeTag[T[_]]): Tree =
-    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe), typeOf[Export1[Any, Any]].typeConstructor)
+    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe))
 
   def importImpl00[F[_, _], T, U](implicit fTag: WeakTypeTag[F[_, _]], tTag: WeakTypeTag[T], uTag: WeakTypeTag[U]): Tree =
-    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe), typeOf[Export00[Any, _, _]].typeConstructor)
+    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe))
 
-  def importImplAux(fTpe: Type, tTpes: List[Type], eTpe: Type): Tree = {
-    val appTpe = appliedType(eTpe, fTpe :: tTpes)
+  def importImplAux(fTpe: Type, tTpes: List[Type]): Tree = {
+    val appTpe = appliedType(typeOf[Export[_]].typeConstructor, appliedType(fTpe, tTpes))
 
     val exporter = c.inferImplicitValue(appTpe, silent = true)
     if(exporter == EmptyTree)
