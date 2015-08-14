@@ -60,6 +60,9 @@ package export {
     class TypeOps(tpe: Type) {
       def typeParams = tpe.typeSymbol.asType.typeParams
     }
+
+    def appliedType(tc: Type, ts: List[Type]): Type = c.universe.appliedType(tc, ts)
+    def appliedType(tc: Type, t: Type): Type = c.universe.appliedType(tc, List(t))
   }
 
   object ExportMacro {
@@ -69,16 +72,16 @@ package export {
     def inst[C <: Context](c: C) = new ExportMacro[c.type](c)
 
     def exportsImpl0[F[_], T](c: Context)(st: c.Expr[F[T]])
-      (implicit fTag: c.WeakTypeTag[F[_]], tTag: c.WeakTypeTag[T]): c.Expr[Export0[F, T]] =
-        c.Expr[Export0[F, T]](inst(c).exportsImpl0[F, T](st.tree))
+      (implicit fTag: c.WeakTypeTag[F[_]], tTag: c.WeakTypeTag[T]): c.Expr[Export[F[T]]] =
+        c.Expr[Export[F[T]]](inst(c).exportsImpl0[F, T](st.tree))
 
     def exportsImpl1[F[_[_]], T[_]](c: Context)(st: c.Expr[F[T]])
-      (implicit fTag: c.WeakTypeTag[F[Any]], tTag: c.WeakTypeTag[T[_]]): c.Expr[Export1[F, T]] =
-        c.Expr[Export1[F, T]](inst(c).exportsImpl1[F, T](st.tree))
+      (implicit fTag: c.WeakTypeTag[F[Any]], tTag: c.WeakTypeTag[T[_]]): c.Expr[Export[F[T]]] =
+        c.Expr[Export[F[T]]](inst(c).exportsImpl1[F, T](st.tree))
 
     def exportsImpl00[F[_, _], T, U](c: Context)(st: c.Expr[F[T, U]])
-      (implicit fTag: c.WeakTypeTag[F[_, _]], tTag: c.WeakTypeTag[T], uTag: c.WeakTypeTag[U]): c.Expr[Export00[F, T, U]] =
-        c.Expr[Export00[F, T, U]](inst(c).exportsImpl00[F, T, U](st.tree))
+      (implicit fTag: c.WeakTypeTag[F[_, _]], tTag: c.WeakTypeTag[T], uTag: c.WeakTypeTag[U]): c.Expr[Export[F[T, U]]] =
+        c.Expr[Export[F[T, U]]](inst(c).exportsImpl00[F, T, U](st.tree))
 
     def exportedImpl(c: Context)(annottees: c.Expr[Any]*): c.Expr[Any] =
       c.Expr[Any](inst(c).exportedImpl(annottees.map(_.tree): _*))
