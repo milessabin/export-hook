@@ -21,9 +21,10 @@ lazy val commonSettings = Seq(
     "bintray/non" at "http://dl.bintray.com/non/maven"
   ),
   libraryDependencies ++= Seq(
-    "com.chuusai"    %%% "shapeless"  % "2.2.5"    % "test",
-    "org.scalatest"  %%% "scalatest"  % "3.0.0-M7" % "test",
-    "org.scalacheck" %%% "scalacheck" % "1.12.4"   % "test",
+    "org.typelevel"  %%% "macro-compat" % "1.0.0-SNAPSHOT",
+    "com.chuusai"    %%% "shapeless"    % "2.2.5"    % "test",
+    "org.scalatest"  %%% "scalatest"    % "3.0.0-M7" % "test",
+    "org.scalacheck" %%% "scalacheck"   % "1.12.4"   % "test",
 
     compilerPlugin("org.spire-math" %% "kind-projector" % "0.5.4")
   ),
