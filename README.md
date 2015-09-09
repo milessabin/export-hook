@@ -81,26 +81,18 @@ This project is a proof of concept of an alternative mechanism, an _export hook_
 instances to be inserted into the implicit scope with the appropriate priority _without_ requiring either a shapeless
 dependency or coupling between subclasses and superclasses, hence respecting module boundaries.
 
-Instead the only dependency would be this project, which currently defines only the following two traits, two trival
-value classes, one annotation and a couple of small Scala macros to support them,
+Instead the only dependency would be this project, which currently defines only one trival value class, two
+annotations, and a couple of small Scala macros to support them,
 
 ```scala
-trait Exporter0[S[_]]  {
-  implicit def exports[F[t] >: S[t], T](implicit st: S[T]): Export0[F, T] =
-    macro ExportMacro.exportsImpl0[F, T]
+class Export[+T](val instance: T) extends AnyVal
+
+class exports extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro ExportMacro.exportsImpl
 }
 
-trait Exporter1[S[_[_]]]  {
-  implicit def exports[F[t[_]] >: S[t], T[_]](implicit st: S[T]): Export1[F, T] =
-    macro ExportMacro.exportsImpl1[F, T]
-}
-
-class Export0[F[_], T](val instance: F[T]) extends AnyVal
-
-class Export1[F[_[_]], T[_]](val instance: F[T]) extends AnyVal
-
-class exported[A] extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro ExportMacro.exportedImpl
+class imports[A] extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro ExportMacro.importsImpl
 }
 ```
 
@@ -129,7 +121,7 @@ object Tc extends TcLowPriority {
 }
 
 // Derived and subclass instances of Tc are automatically included here ...
-@exported[Tc]
+@imports[Tc]
 trait TcLowPriority {
   // Instances which should be lower priority than derived
   // or subclass instances should be defined here ...
@@ -149,7 +141,8 @@ import export._, shapeless._
 
 trait DerivedTc[T] extends Tc[T]
 
-object DerivedTc extends Exporter0[DerivedTc] {
+@exports
+object DerivedTc {
   implicit def hnil: DerivedTc[HNil] = ...
 
   implicit def hcons[H, T <: HList]
@@ -176,7 +169,8 @@ import export._
 
 trait TcSub[T] extends Tc[T]
 
-object TcSub extends Exporter0[TcSub] {
+@exports
+object TcSub {
   implicit val fooInst: TcSub[Foo] = ...
 }
 
@@ -188,8 +182,8 @@ The type class user should import both the type class and the type class deriver
 
 ```scala
 import Tc
-import DeriverTc.exports // for derived instances
-import TcSub.exports     // for subclass instances
+import DeriverTc.exports._ // for derived instances
+import TcSub.exports._     // for subclass instances
 ```
 
 If the type class user doesn't want derived or subclass instances they simply omit the corresponding import in which
@@ -220,14 +214,14 @@ export-hook 1.0.0 is Scala 2.11.7 supported via the macro paradise compiler plug
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
-  "org.typelevel" %% "export-hook" % "1.0.0",
+  "org.typelevel" %% "export-hook" % "1.0.1-SNAPSHOT",
   compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
 )
 ```
 
 ## Building export-hook
 
-export-hook is built with SBT 0.13.8 or later, and its master branch is built with Scala 2.11.7 by default.
+export-hook is built with SBT 0.13.9 or later, and its master branch is built with Scala 2.11.7 by default.
 
 ## Participation
 
