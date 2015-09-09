@@ -37,7 +37,7 @@ package classwithderivation {
       }
   }
 
-  @exported[Tc]
+  @imports[Tc]
   trait TcDefault {
     implicit def default[T] =
       new Tc[T] {
@@ -65,7 +65,7 @@ package classwithsubclasses {
       }
   }
 
-  @exported[Tc]
+  @imports[Tc]
   trait TcDefault {
     implicit def default[T]: Tc[T] =
       new Tc[T] {
@@ -76,7 +76,8 @@ package classwithsubclasses {
   // Subclass within the same module
   trait TcSub[T] extends Tc[T]
 
-  object TcSub extends TcSubInstances with Exporter0[TcSub]
+  @exports
+  object TcSub extends TcSubInstances
   trait TcSubInstances extends TcSubDefault {
     implicit val fooInst: TcSub[Foo] =
       new TcSub[Foo] {
@@ -84,7 +85,7 @@ package classwithsubclasses {
       }
   }
 
-  @exported[TcSub]
+  @imports[TcSub]
   trait TcSubDefault {
     implicit def default[T]: TcSub[T] =
       new TcSub[T] {
@@ -99,7 +100,8 @@ package externalsubclass {
   // Subclass in a different module
   trait TcExtSub[T] extends Tc[T]
 
-  object TcExtSub extends TcExtSubInstances with Exporter0[TcExtSub]
+  @exports
+  object TcExtSub extends TcExtSubInstances
   trait TcExtSubInstances extends TcExtSubDefault {
     implicit def barInst: TcExtSub[Bar] =
       new TcExtSub[Bar] {
@@ -107,7 +109,7 @@ package externalsubclass {
       }
   }
 
-  @exported[TcExtSub]
+  @imports[TcExtSub]
   trait TcExtSubDefault {
     implicit def default[T]: TcExtSub[T] =
       new TcExtSub[T] {

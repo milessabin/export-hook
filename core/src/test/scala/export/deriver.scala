@@ -16,13 +16,16 @@
 
 import export._, classwithderivation._
 
-package object tcderiver extends Exporter0[DerivedTc]
+package object tcderiver {
+  val exports = DerivedTc.exports
+}
 
 package tcderiver {
   import shapeless._
 
   trait DerivedTc[T] extends Tc[T]
 
+  @exports
   object DerivedTc extends DerivedTc0 {
     implicit def hnil: DerivedTc[HNil] =
       new DerivedTc[HNil] {

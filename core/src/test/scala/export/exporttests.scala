@@ -21,7 +21,7 @@ import org.scalatest.FunSuite
 import adtdefns._
 
 class DeriverTests extends FunSuite {
-  import classwithderivation._, tcderiver.exports
+  import classwithderivation._, tcderiver.exports._
 
   test("Tc[Int]") {
     assert(Tc[Int].describe === "Tc[Int]")
@@ -57,13 +57,13 @@ class SubclassTests extends FunSuite {
     assert(Tc[Int].describe === "Tc[Int]")
   }
 
-  test("Tc[Foo ]") {
-    import TcSub.exports
+  test("Tc[Foo]") {
+    import TcSub.exports._
     assert(Tc[Foo].describe === "TcSub[Foo]")
   }
 
   test("Tc[Bar]") {
-    import TcExtSub.exports
+    import TcExtSub.exports._
     assert(Tc[Bar].describe === "TcExtSub[Bar]")
   }
 }

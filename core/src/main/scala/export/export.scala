@@ -26,28 +26,82 @@ import macrocompat.bundle
 // https://issues.scala-lang.org/browse/SI-7332
 class Export[+T](val instance: T) extends AnyVal
 
-trait Exporter0[S[_]]  {
-  implicit def exports[F[t] >: S[t], T](implicit st: S[T]): Export[F[T]] =
-    macro ExportMacro.exportsImpl0[F, T]
+class exports extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro ExportMacro.exportsImpl
 }
 
-trait Exporter1[S[_[_]]]  {
-  implicit def exports[F[t[_]] >: S[t], T[_]](implicit st: S[T]): Export[F[T]] =
-    macro ExportMacro.exportsImpl1[F, T]
-}
-
-trait Exporter00[S[_, _]]  {
-  implicit def exports[F[t, u] >: S[t, u], T, U](implicit st: S[T, U]): Export[F[T, U]] =
-    macro ExportMacro.exportsImpl00[F, T, U]
-}
-
-class exported[A] extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro ExportMacro.exportedImpl
+class imports[A] extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro ExportMacro.importsImpl
 }
 
 @bundle
 class ExportMacro(val c: whitebox.Context) {
   import c.universe._
+
+  def exportsImpl(annottees: Tree*): Tree = {
+    annottees match {
+      case List(m @ ModuleDef(mods, termName, Template(parents, self, body0))) =>
+        val tc = Ident(termName.toTypeName)
+        val tcTpe = c.typecheck(tc, c.TYPEmode).tpe
+        val body = body0.filter {
+          case DefDef(_, termNames.CONSTRUCTOR, _, _, _, _) => false
+          case _ => true
+        }
+
+        val kind = tcTpe.typeParams.map(_.asType.typeParams.length)
+        val suffix =
+          kind match {
+            case List(0) => "0"
+            case List(1) => "1"
+            case List(0, 0) => "00"
+            case _ =>
+              c.abort(c.enclosingPosition, "$tc has an unsupported kind")
+          }
+
+        val (f, fd) = {
+          val t = TypeName(c.freshName)
+          val x = TypeName(c.freshName)
+          val x1 = TypeName(c.freshName)
+          val y = TypeName(c.freshName)
+          (
+            t,
+            kind match {
+              case List(0) => q"type $t[$x] >: $tc[$x]"
+              case List(1) => q"type $t[$x1] >: $tc[$x1]"
+              case List(0, 0) => q"type $t[$x, $y] >: $tc[$x, $y]"
+              case _ =>
+                c.abort(c.enclosingPosition, "$tc has an unsupported kind")
+            }
+          )
+        }
+
+        val (ts: List[TypeName], tds: List[Tree]) = (kind.map { k =>
+          val t = TypeName(c.freshName)
+          (t, if(k == 0) q"type $t" else q"type $t[_]")
+        }).unzip
+
+        val exportsImpl = TermName(s"exportsImpl$suffix")
+        val implicitName = TermName(c.freshName)
+
+        q"""
+          $mods object $termName extends ..$parents { $self =>
+            object exports {
+              import scala.language.experimental.macros
+
+              def apply[$fd, ..$tds](implicit st: $tc[..$ts]): _root_.export.Export[$f[..$ts]] =
+                macro _root_.export.ExportMacro.$exportsImpl[$f, ..$ts]
+
+              implicit def $implicitName[$fd, ..$tds](implicit st: $tc[..$ts]): _root_.export.Export[$f[..$ts]] =
+                macro _root_.export.ExportMacro.$exportsImpl[$f, ..$ts]
+            }
+            ..$body
+          }
+        """
+
+      case other =>
+        c.abort(c.enclosingPosition, "Unexpected tree shape.")
+    }
+  }
 
   def exportsImpl0[F[_], T](st: Tree)
     (implicit fTag: WeakTypeTag[F[_]], tTag: WeakTypeTag[T]): Tree =
@@ -66,7 +120,7 @@ class ExportMacro(val c: whitebox.Context) {
     q"""new $appTpe($st)"""
   }
 
-  def exportedImpl(annottees: Tree*): Tree = {
+  def importsImpl(annottees: Tree*): Tree = {
     val Apply(Select(New(AppliedTypeTree(_, List(tc))), _), _) = c.prefix.tree
     val tcTpe = c.typecheck(tc, c.TYPEmode).tpe
     val kind = tcTpe.typeParams.map(_.asType.typeParams.length)
