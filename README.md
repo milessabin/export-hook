@@ -5,6 +5,8 @@ instances in the implicit scope of a type class without imposing heavyweight dep
 
 [![Build Status](https://api.travis-ci.org/milessabin/export-hook.png?branch=master)](https://travis-ci.org/milessabin/export-hook)
 [![Stories in Ready](https://badge.waffle.io/milessabin/export-hook.png?label=Ready)](https://waffle.io/milessabin/export-hook)
+[![Gitter](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/milessabin/export-hook)
+[![Maven Central](https://img.shields.io/maven-central/v/org.typelevel/export-hook_2.11.svg)](https://maven-badges.herokuapp.com/maven-central/org.typelevel/export-hook_2.11)
 
 ## What are "orphan" type class instances?
 
@@ -189,10 +191,11 @@ import TcSub.exports._     // for subclass instances
 If the type class user doesn't want derived or subclass instances they simply omit the corresponding import in which
 case they will only see underived base instances.
 
-## Feedback wanted!
+## Current status
 
-This is a proof of concept ... please create issues here or hop on the [shapeless][shapeless-gitter] or
-[cats][cats-gitter] gitter channels and let us know what you think.
+This is a young project and we are keen to get input from anyone who finds it useful ... please create issues here or
+hop on the [gitter channel][exporthook-gitter].  Discussion is also welcome on the [shapeless][shapeless-gitter] and
+[cats][cats-gitter] gitter channels ... please let us know what you think.
 
 ## Using export-hook
 
@@ -228,6 +231,11 @@ export-hook is built with SBT 0.13.9 or later, and its master branch is built wi
 The export-hook project supports the [Typelevel][typelevel] [code of conduct][codeofconduct] and wants all of its
 channels (Gitter, github, etc.) to be welcoming environments for everyone.
 
+## Projects using macro-compat
+
++ [circe][circe]
++ [kittens][kittens]
+
 ## Contributors
 
 + Your name here :-)
@@ -237,9 +245,12 @@ channels (Gitter, github, etc.) to be welcoming environments for everyone.
 [eed3si9n]: https://twitter.com/eed3si9n
 [import-tax]: http://eed3si9n.com/revisiting-implicits-without-import-tax
 [shapeless]: https://github.com/milessabin/shapeless
+[exporthook-gitter]: https://gitter.im/milessabin/export-hook
 [shapeless-gitter]: https://gitter.im/milessabin/shapeless
 [cats-gitter]: https://gitter.im/non/cats
 [typelevel]: http://typelevel.org/
 [codeofconduct]: http://typelevel.org/conduct.html
 [sonatype]: https://oss.sonatype.org/index.html#nexus-search;quick~export-hook
 [ci]: https://travis-ci.org/milessabin/export-hook
+[circe]: https://github.com/travisbrown/circe
+[kittens]: https://github.com/milessabin/kittens
