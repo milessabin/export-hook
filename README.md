@@ -231,7 +231,7 @@ export-hook is built with SBT 0.13.9 or later, and its master branch is built wi
 The export-hook project supports the [Typelevel][typelevel] [code of conduct][codeofconduct] and wants all of its
 channels (Gitter, github, etc.) to be welcoming environments for everyone.
 
-## Projects using macro-compat
+## Projects using export-hook
 
 + [circe][circe]
 + [kittens][kittens]
