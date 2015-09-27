@@ -32,4 +32,4 @@ env:
 notifications:
   webhooks:
     urls:
-      - https://webhooks.gitter.im/e/5b8b45fd2ee7632a4a84
+      - https://webhooks.gitter.im/e/13693154b9f6e97b90f4
