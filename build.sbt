@@ -70,6 +70,7 @@ addCommandAlias("root", ";project root")
 
 lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies ++= Seq(
+    "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
     compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
   ),
@@ -80,7 +81,7 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
       // in Scala 2.10, quasiquotes are provided by macro paradise
       case Some((2, 10)) =>
         Seq(
-              "org.scalamacros" %% "quasiquotes" % "2.0.0" cross CrossVersion.binary
+          "org.scalamacros" %% "quasiquotes" % "2.0.0" cross CrossVersion.binary
         )
     }
   }

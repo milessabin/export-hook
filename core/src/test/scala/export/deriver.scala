@@ -14,14 +14,13 @@
  * limitations under the License.
  */
 
-import export._, classwithderivation._
-
 package object tcderiver {
   val exports = DerivedTc.exports
 }
 
 package tcderiver {
   import shapeless._
+  import export._, classwithderivation._
 
   trait DerivedTc[T] extends Tc[T]
 
@@ -29,30 +28,41 @@ package tcderiver {
   object DerivedTc extends DerivedTc0 {
     implicit def hnil: DerivedTc[HNil] =
       new DerivedTc[HNil] {
-        def describe: String = "HNil"
+        def safeDescribe(seen: Set[Any]) = "HNil"
       }
 
     implicit def hcons[H, T <: HList](implicit hd: Lazy[Tc[H]], tl: Lazy[DerivedTc[T]]): DerivedTc[H :: T] =
       new DerivedTc[H :: T] {
-        def describe: String = s"${hd.value.describe} :: ${tl.value.describe}"
+        def safeDescribe(seen: Set[Any]) =
+          if(seen(this)) "loop (hcons)" else {
+            val seen1 = seen+this
+            s"${hd.value.safeDescribe(seen1)} :: ${tl.value.safeDescribe(seen1)}"
+          }
       }
 
     implicit def cnil: DerivedTc[CNil] =
       new DerivedTc[CNil] {
-        def describe: String = "CNil"
+        def safeDescribe(seen: Set[Any]) = "CNil"
       }
 
     implicit def ccons[H, T <: Coproduct](implicit hd: Lazy[Tc[H]], tl: Lazy[DerivedTc[T]]): DerivedTc[H :+: T] =
       new DerivedTc[H :+: T] {
-        def describe: String = s"${hd.value.describe} :+: ${tl.value.describe}"
+        def safeDescribe(seen: Set[Any]) =
+          if(seen(this)) "loop (ccons)" else {
+            val seen1 = seen+this
+            s"${hd.value.safeDescribe(seen1)} :+: ${tl.value.safeDescribe(seen1)}"
+          }
       }
   }
 
   trait DerivedTc0 {
     implicit def gen[T, R](implicit gen: Generic.Aux[T, R], mtcr: Lazy[DerivedTc[R]]): DerivedTc[T] =
       new DerivedTc[T] {
-        def describe: String = s"gen(${mtcr.value.describe})"
+        def safeDescribe(seen: Set[Any]) =
+          if(seen(this)) "loop (gen)" else {
+            val seen1 = seen+this
+            s"gen(${mtcr.value.safeDescribe(seen1)})"
+          }
       }
   }
 }
-

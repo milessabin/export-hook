@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-package adtdefns
+package instantiator
 
-case class Foo(i: Int)
+import export.ExportInstantiated
+import classwithderivation._, higherkinded._
 
-case class Bar(i: Int, d: Double)
-
-case class Baz(d: Double)
-
-object Baz {
-  import classwithderivation._
-
-  implicit def bazInst: Tc[Baz] =
-    new Tc[Baz] {
-      def safeDescribe(seen: Set[Any]) = "Tc[Baz]"
-    }
+object tc1instantiator {
+  implicit def instantiate[F[_], T](implicit tc1f: Tc1[F]): ExportInstantiated[Tc[F[T]]] =
+    ExportInstantiated(
+      new Tc[F[T]] {
+        def safeDescribe(seen: Set[Any]) =
+          if(seen(this)) "loop (instantiate)" else {
+            val seen1 = seen+this
+            s"Instantiate ${tc1f.safeDescribe(seen1)}"
+          }
+      }
+    )
 }
-
-case class Quux(foo: Foo, bar: Bar, baz: Baz)
