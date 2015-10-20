@@ -123,6 +123,22 @@ class ExportMacro(val c: whitebox.Context) {
             case _ =>
               c.abort(c.enclosingPosition, "$tc has an unsupported kind")
           }
+        val (f, fd) = {
+          val t = TypeName(c.freshName)
+          val x = TypeName(c.freshName)
+          val x1 = TypeName(c.freshName)
+          val y = TypeName(c.freshName)
+          (
+            t,
+            kind match {
+              case List(0) => q"type $t[$x] >: $tcRef[$x]"
+              case List(1) => q"type $t[$x1[_]] >: $tcRef[$x1]"
+              case List(0, 0) => q"type $t[$x, $y] >: $tcRef[$x, $y]"
+              case _ =>
+                c.abort(c.enclosingPosition, "$tc has an unsupported kind")
+            }
+          )
+        }
 
         val (ts: List[TypeName], tds: List[Tree]) = (kind.map { k =>
           val t = TypeName(c.freshName)
@@ -138,10 +154,10 @@ class ExportMacro(val c: whitebox.Context) {
             object exports {
               import scala.language.experimental.macros
 
-              def apply[..$tds]: $exportTpt[$tcRef[..$ts]] =
+              def apply[$fd, ..$tds]: $exportTpt[$f[..$ts]] =
                 macro _root_.export.ExportMacro.$exportsImpl[$tcRef, ..$ts, $exportTpt]
 
-              implicit def $implicitName[..$tds]: $exportTpt[$tcRef[..$ts]] =
+              implicit def $implicitName[$fd, ..$tds]: $exportTpt[$f[..$ts]] =
                 macro _root_.export.ExportMacro.$exportsImpl[$tcRef, ..$ts, $exportTpt]
             }
             ..$body
