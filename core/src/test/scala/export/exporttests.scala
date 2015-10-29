@@ -21,126 +21,126 @@ import org.scalatest.FunSuite
 import adtdefns._
 
 class DeriverTests extends FunSuite {
-  import classwithderivation._, tcderiver.exports._
+  import tca._, deriver.tcaderived._
 
-  test("Tc[Int]") {
-    assert(Tc[Int].describe === "Tc[Int]")
+  test("TcA[Int]") {
+    assert(TcA[Int].describe === "TcA[Int]")
   }
 
-  test("Tc[Foo]") {
-    assert(Tc[Foo].describe === "Tc[Foo]")
+  test("TcA[Foo]") {
+    assert(TcA[Foo].describe === "TcA[Foo]")
   }
 
-  test("Tc[Bar]") {
-    assert(Tc[Bar].describe === "gen(Tc[Int] :: Default Tc[T] :: HNil)")
+  test("TcA[Bar]") {
+    assert(TcA[Bar].describe === "gen(TcA[Int] :: Default TcA[T] :: HNil)")
   }
 
-  test("Tc[Baz]") {
-    assert(Tc[Baz].describe === "Tc[Baz]")
+  test("TcA[Baz]") {
+    assert(TcA[Baz].describe === "TcA[Baz]")
   }
 
-  test("Tc[Double]") {
-    assert(Tc[Double].describe === "Default Tc[T]")
+  test("TcA[Double]") {
+    assert(TcA[Double].describe === "Default TcA[T]")
   }
 
-  test("Tc[Quux]") {
-    assert(Tc[Quux].describe ===
-      "gen(Tc[Foo] :: gen(Tc[Int] :: Default Tc[T] :: HNil) :: Tc[Baz] :: HNil)")
+  test("TcA[Quux]") {
+    assert(TcA[Quux].describe ===
+      "gen(TcA[Foo] :: gen(TcA[Int] :: Default TcA[T] :: HNil) :: TcA[Baz] :: HNil)")
   }
 
-  test("Tc[Option[Int]]") {
-    assert(Tc[Option[Int]].describe ===
-      "gen(gen(HNil) :+: gen(Tc[Int] :: HNil) :+: CNil)")
+  test("TcA[Option[Int]]") {
+    assert(TcA[Option[Int]].describe ===
+      "gen(gen(HNil) :+: gen(TcA[Int] :: HNil) :+: CNil)")
   }
 
-  test("Tc[List[Int]]") {
-    assert(Tc[List[Int]].describe ===
-      "gen(gen(Tc[Int] :: loop (gen) :: HNil) :+: gen(HNil) :+: CNil)")
+  test("TcA[List[Int]]") {
+    assert(TcA[List[Int]].describe ===
+      "gen(gen(TcA[Int] :: loop (gen) :: HNil) :+: gen(HNil) :+: CNil)")
   }
 }
 
 class SubclassTests extends FunSuite {
-  import classwithsubclasses._, externalsubclass._
+  import tcb._, tcbext._
 
-  test("Tc[Int]") {
-    assert(Tc[Int].describe === "Tc[Int]")
+  test("TcB[Int]") {
+    assert(TcB[Int].describe === "TcB[Int]")
   }
 
-  test("Tc[Foo]") {
-    import TcSub.exports._
-    assert(Tc[Foo].describe === "TcSub[Foo]")
+  test("TcB[Foo]") {
+    import TcBSub.exports._
+    assert(TcB[Foo].describe === "TcBSub[Foo]")
   }
 
-  test("Tc[Bar]") {
-    import TcExtSub.exports._
-    assert(Tc[Bar].describe === "TcExtSub[Bar]")
+  test("TcB[Bar]") {
+    import TcBExtSub.exports._
+    assert(TcB[Bar].describe === "TcBExtSub[Bar]")
   }
 }
 
-class OptionalTests extends FunSuite {
-  import classwithderivation._, optional.optinstances._, tcderiver.exports._
+class OrphanTests extends FunSuite {
+  import tca._, orphans.tcaorphans._, deriver.tcaderived._
 
-  test("Tc[Int]") {
-    assert(Tc[Int].describe === "Tc[Int]")
+  test("TcA[Int]") {
+    assert(TcA[Int].describe === "TcA[Int]")
   }
 
-  test("Tc[Foo]") {
-    assert(Tc[Foo].describe === "Tc[Foo]")
+  test("TcA[Foo]") {
+    assert(TcA[Foo].describe === "TcA[Foo]")
   }
 
-  test("Tc[Bar]") {
-    assert(Tc[Bar].describe === "Tc[Bar]")
+  test("TcA[Bar]") {
+    assert(TcA[Bar].describe === "TcA[Bar]")
   }
 
-  test("Tc[Baz]") {
-    assert(Tc[Baz].describe === "Tc[Baz]")
+  test("TcA[Baz]") {
+    assert(TcA[Baz].describe === "TcA[Baz]")
   }
 
-  test("Tc[Double]") {
-    assert(Tc[Double].describe === "Default Tc[T]")
+  test("TcA[Double]") {
+    assert(TcA[Double].describe === "Default TcA[T]")
   }
 
-  test("Tc[Boolean]") {
-    assert(Tc[Boolean].describe === "Tc[Boolean]")
+  test("TcA[Boolean]") {
+    assert(TcA[Boolean].describe === "TcA[Boolean]")
   }
 
-  test("Tc[Quux]") {
-    assert(Tc[Quux].describe ===
-      "gen(Tc[Foo] :: Tc[Bar] :: Tc[Baz] :: HNil)")
+  test("TcA[Quux]") {
+    assert(TcA[Quux].describe ===
+      "gen(TcA[Foo] :: TcA[Bar] :: TcA[Baz] :: HNil)")
   }
 }
 
 class InstantiationTests extends FunSuite {
-  import classwithderivation._, instantiator.tc1instantiator._, tcderiver.exports._
+  import tca._, instantiator.tc1instantiator._, deriver.tcaderived._
 
-  test("Tc[Int]") {
-    assert(Tc[Int].describe === "Tc[Int]")
+  test("TcA[Int]") {
+    assert(TcA[Int].describe === "TcA[Int]")
   }
 
-  test("Tc[Option[Int]]") {
-    assert(Tc[Option[Int]].describe === "Instantiate Tc1[Option]")
+  test("TcA[Option[Int]]") {
+    assert(TcA[Option[Int]].describe === "Instantiate TcA1[Option]")
   }
 
-  test("Tc[List[Int]]") {
-    assert(Tc[List[Int]].describe === "Instantiate Default Tc1[F]")
+  test("TcA[List[Int]]") {
+    assert(TcA[List[Int]].describe === "Instantiate Default TcA1[F]")
   }
 }
 
 class CustomPriorityTests extends FunSuite {
-  import classwithderivation._, instantiator.tc1instantiator._, tcderiver.exports._, customprioritization._
+  import tca._, instantiator.tc1instantiator._, deriver.tcaderived._, customprioritization._
 
-  test("Tc[Int]") {
-    assert(Tc[Int].describe === "Tc[Int]")
+  test("TcA[Int]") {
+    assert(TcA[Int].describe === "TcA[Int]")
   }
 
-  test("Tc[Option[Int]]") {
-    assert(Tc[Option[Int]].describe === "Instantiate Tc1[Option]")
+  test("TcA[Option[Int]]") {
+    assert(TcA[Option[Int]].describe === "Instantiate TcA1[Option]")
   }
 
   import CustomPrioritization._
 
-  test("Tc[List[Int]]") {
-    assert(Tc[List[Int]].describe ===
-      "gen(gen(Tc[Int] :: loop (gen) :: HNil) :+: gen(HNil) :+: CNil)")
+  test("TcA[List[Int]]") {
+    assert(TcA[List[Int]].describe ===
+      "gen(gen(TcA[Int] :: loop (gen) :: HNil) :+: gen(HNil) :+: CNil)")
   }
 }

@@ -16,156 +16,158 @@
 
 import adtdefns._
 
-package classwithderivation {
+package tca {
   import export._
 
-  trait Tc[T] {
+  trait TcA[T] {
     def describe: String = safeDescribe(Set.empty)
     def safeDescribe(seen: Set[Any]): String
   }
 
-  object Tc extends TcDefault {
-    def apply[T](implicit mtct: Tc[T]): Tc[T] = mtct
+  object TcA extends TcADefault {
+    def apply[T](implicit mtct: TcA[T]): TcA[T] = mtct
 
-    implicit val intInst: Tc[Int] =
-      new Tc[Int] {
-        def safeDescribe(seen: Set[Any]) = "Tc[Int]"
+    implicit val intInst: TcA[Int] =
+      new TcA[Int] {
+        def safeDescribe(seen: Set[Any]) = "TcA[Int]"
       }
 
-    implicit val fooInst: Tc[Foo] =
-      new Tc[Foo] {
-        def safeDescribe(seen: Set[Any]) = "Tc[Foo]"
+    implicit val fooInst: TcA[Foo] =
+      new TcA[Foo] {
+        def safeDescribe(seen: Set[Any]) = "TcA[Foo]"
       }
   }
 
-  @imports[Tc]
-  trait TcDefault {
+  @imports[TcA]
+  trait TcADefault {
     implicit def default[T] =
-      new Tc[T] {
-        def safeDescribe(seen: Set[Any]) = "Default Tc[T]"
+      new TcA[T] {
+        def safeDescribe(seen: Set[Any]) = "Default TcA[T]"
       }
   }
 }
 
-package classwithsubclasses {
+package tcb {
   import export._
 
   // Type class definition
-  trait Tc[T] {
+  trait TcB[T] {
     def describe: String = safeDescribe(Set.empty)
     def safeDescribe(seen: Set[Any]): String
   }
 
   // Include module-local subclass instances
-  object Tc extends TcInstances
-  trait TcInstances extends TcDefault {
-    def apply[T](implicit mtct: Tc[T]): Tc[T] = mtct
+  object TcB extends TcBInstances
+  trait TcBInstances extends TcBDefault {
+    def apply[T](implicit mtct: TcB[T]): TcB[T] = mtct
 
-    implicit val intInst: Tc[Int] =
-      new Tc[Int] {
-        def safeDescribe(seen: Set[Any]) = "Tc[Int]"
+    implicit val intInst: TcB[Int] =
+      new TcB[Int] {
+        def safeDescribe(seen: Set[Any]) = "TcB[Int]"
       }
   }
 
-  @imports[Tc]
-  trait TcDefault {
-    implicit def default[T]: Tc[T] =
-      new Tc[T] {
-        def safeDescribe(seen: Set[Any]) = "Default Tc[T]"
+  @imports[TcB]
+  trait TcBDefault {
+    implicit def default[T]: TcB[T] =
+      new TcB[T] {
+        def safeDescribe(seen: Set[Any]) = "Default TcB[T]"
       }
   }
 
   // Subclass within the same module
-  trait TcSub[T] extends Tc[T]
+  trait TcBSub[T] extends TcB[T]
 
   @exports
-  object TcSub extends TcSubInstances
-  trait TcSubInstances extends TcSubDefault {
-    implicit val fooInst: TcSub[Foo] =
-      new TcSub[Foo] {
-        def safeDescribe(seen: Set[Any]) = "TcSub[Foo]"
+  object TcBSub extends TcBSubInstances
+  trait TcBSubInstances extends TcBSubDefault {
+    implicit val fooInst: TcBSub[Foo] =
+      new TcBSub[Foo] {
+        def safeDescribe(seen: Set[Any]) = "TcBSub[Foo]"
       }
   }
 
-  @imports[TcSub]
-  trait TcSubDefault {
-    implicit def default[T]: TcSub[T] =
-      new TcSub[T] {
-        def safeDescribe(seen: Set[Any]) = "Default TcSub[T]"
+  @imports[TcBSub]
+  trait TcBSubDefault {
+    implicit def default[T]: TcBSub[T] =
+      new TcBSub[T] {
+        def safeDescribe(seen: Set[Any]) = "Default TcBSub[T]"
       }
   }
 }
 
-package externalsubclass {
-  import classwithsubclasses._, export._
+package tcbext {
+  import tcb._, export._
 
   // Subclass in a different module
-  trait TcExtSub[T] extends Tc[T]
+  trait TcBExtSub[T] extends TcB[T]
 
   @exports
-  object TcExtSub extends TcExtSubInstances
-  trait TcExtSubInstances extends TcExtSubDefault {
-    implicit def barInst: TcExtSub[Bar] =
-      new TcExtSub[Bar] {
-        def safeDescribe(seen: Set[Any]) = "TcExtSub[Bar]"
+  object TcBExtSub extends TcBExtSubInstances
+  trait TcBExtSubInstances extends TcBExtSubDefault {
+    implicit def barInst: TcBExtSub[Bar] =
+      new TcBExtSub[Bar] {
+        def safeDescribe(seen: Set[Any]) = "TcBExtSub[Bar]"
       }
   }
 
-  @imports[TcExtSub]
-  trait TcExtSubDefault {
-    implicit def default[T]: TcExtSub[T] =
-      new TcExtSub[T] {
-        def safeDescribe(seen: Set[Any]) = "Default TcExtSub[T]"
+  @imports[TcBExtSub]
+  trait TcBExtSubDefault {
+    implicit def default[T]: TcBExtSub[T] =
+      new TcBExtSub[T] {
+        def safeDescribe(seen: Set[Any]) = "Default TcBExtSub[T]"
       }
   }
 }
 
-package optional {
+package orphans {
   import export._
-  import classwithderivation._
+  import tca._
 
-  // Optional instances in a different module
-  object optinstances {
+  // Orphan instances in a different module
+  @reexports[OrphanTcA]
+  object tcaorphans
+
+  trait OrphanTcA[T] extends TcA[T]
+
+  @exports(Orphan)
+  object OrphanTcA {
     // Primitive instance
-    implicit def boolInst: ExportOptional[Tc[Boolean]] =
-      ExportOptional(
-        new Tc[Boolean] {
-          def safeDescribe(seen: Set[Any]) = "Tc[Boolean]"
-        }
-      )
+    implicit def boolInst: OrphanTcA[Boolean] =
+      new OrphanTcA[Boolean] {
+        def safeDescribe(seen: Set[Any]) = "TcA[Boolean]"
+      }
 
     // Instance which could be derived
-    implicit def barInst: ExportOptional[Tc[Bar]] =
-      ExportOptional(
-        new Tc[Bar] {
-          def safeDescribe(seen: Set[Any]) = "Tc[Bar]"
-        }
-      )
+    implicit def barInst: OrphanTcA[Bar] =
+      new OrphanTcA[Bar] {
+        def safeDescribe(seen: Set[Any]) = "TcA[Bar]"
+      }
   }
 }
 
-package higherkinded {
+package tca1 {
   import export._
 
-  trait Tc1[F[_]] {
+  trait TcA1[F[_]] {
     def describe: String = safeDescribe(Set.empty)
     def safeDescribe(seen: Set[Any]): String
   }
 
-  object Tc1 extends Tc1Default {
-    def apply[F[_]](implicit mtcf: Tc1[F]): Tc1[F] = mtcf
+  object TcA1 extends TcA1Default {
+    def apply[F[_]](implicit mtcf: TcA1[F]): TcA1[F] = mtcf
 
-    implicit val optionInst: Tc1[Option] =
-      new Tc1[Option] {
-        def safeDescribe(seen: Set[Any]) = "Tc1[Option]"
+    implicit val optionInst: TcA1[Option] =
+      new TcA1[Option] {
+        def safeDescribe(seen: Set[Any]) = "TcA1[Option]"
       }
   }
 
-  @imports[Tc1]
-  trait Tc1Default {
+  @imports[TcA1]
+  trait TcA1Default {
     implicit def default[F[_]] =
-      new Tc1[F] {
-        def safeDescribe(seen: Set[Any]) = "Default Tc1[F]"
+      new TcA1[F] {
+        def safeDescribe(seen: Set[Any]) = "Default TcA1[F]"
       }
   }
 }
@@ -177,7 +179,7 @@ package customprioritization {
     implicit val priority =
       ExportPriority[
         ExportHighPriority,
-        ExportOptional,
+        ExportOrphan,
         ExportSubclass,
         ExportAlgebraic,
         ExportGeneric,

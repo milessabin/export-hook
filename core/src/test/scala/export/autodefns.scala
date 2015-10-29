@@ -14,21 +14,17 @@
  * limitations under the License.
  */
 
-package adtdefns
+package autodefns
 
-case class Foo(i: Int)
+import export._
+import adtdefns._
+import tca._, tcb._, deriver._, orphans._
 
-case class Bar(i: Int, d: Double)
+@reexports[OrphanTcA]
+object single
 
-case class Baz(d: Double)
+@reexports[DerivedTcA, DerivedTcB]
+object twoclasses
 
-object Baz {
-  import tca._
-
-  implicit def bazInst: TcA[Baz] =
-    new TcA[Baz] {
-      def safeDescribe(seen: Set[Any]) = "TcA[Baz]"
-    }
-}
-
-case class Quux(foo: Foo, bar: Bar, baz: Baz)
+@reexports[DerivedTcA, OrphanTcA]
+object twopriorities

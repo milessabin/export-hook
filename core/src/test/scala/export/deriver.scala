@@ -14,55 +14,103 @@
  * limitations under the License.
  */
 
-package object tcderiver {
-  val exports = DerivedTc.exports
+package deriver
+
+import export._
+
+import shapeless._
+import tca._, tcb._
+
+@reexports[DerivedTcA]
+object tcaderived
+
+trait DerivedTcA[T] extends TcA[T]
+
+@exports
+object DerivedTcA extends DerivedTcA0 {
+  implicit def hnil: DerivedTcA[HNil] =
+    new DerivedTcA[HNil] {
+      def safeDescribe(seen: Set[Any]) = "HNil"
+    }
+
+  implicit def hcons[H, T <: HList](implicit hd: Lazy[TcA[H]], tl: Lazy[DerivedTcA[T]]): DerivedTcA[H :: T] =
+    new DerivedTcA[H :: T] {
+      def safeDescribe(seen: Set[Any]) =
+        if(seen(this)) "loop (hcons)" else {
+          val seen1 = seen+this
+          s"${hd.value.safeDescribe(seen1)} :: ${tl.value.safeDescribe(seen1)}"
+        }
+    }
+
+  implicit def cnil: DerivedTcA[CNil] =
+    new DerivedTcA[CNil] {
+      def safeDescribe(seen: Set[Any]) = "CNil"
+    }
+
+  implicit def ccons[H, T <: Coproduct](implicit hd: Lazy[TcA[H]], tl: Lazy[DerivedTcA[T]]): DerivedTcA[H :+: T] =
+    new DerivedTcA[H :+: T] {
+      def safeDescribe(seen: Set[Any]) =
+        if(seen(this)) "loop (ccons)" else {
+          val seen1 = seen+this
+          s"${hd.value.safeDescribe(seen1)} :+: ${tl.value.safeDescribe(seen1)}"
+        }
+    }
 }
 
-package tcderiver {
-  import shapeless._
-  import export._, classwithderivation._
+trait DerivedTcA0 {
+  implicit def gen[T, R](implicit gen: Generic.Aux[T, R], mtcr: Lazy[DerivedTcA[R]]): DerivedTcA[T] =
+    new DerivedTcA[T] {
+      def safeDescribe(seen: Set[Any]) =
+        if(seen(this)) "loop (gen)" else {
+          val seen1 = seen+this
+          s"gen(${mtcr.value.safeDescribe(seen1)})"
+        }
+    }
+}
 
-  trait DerivedTc[T] extends Tc[T]
+@reexports[DerivedTcB]
+object tcbderived
 
-  @exports
-  object DerivedTc extends DerivedTc0 {
-    implicit def hnil: DerivedTc[HNil] =
-      new DerivedTc[HNil] {
-        def safeDescribe(seen: Set[Any]) = "HNil"
-      }
+trait DerivedTcB[T] extends TcB[T]
 
-    implicit def hcons[H, T <: HList](implicit hd: Lazy[Tc[H]], tl: Lazy[DerivedTc[T]]): DerivedTc[H :: T] =
-      new DerivedTc[H :: T] {
-        def safeDescribe(seen: Set[Any]) =
-          if(seen(this)) "loop (hcons)" else {
-            val seen1 = seen+this
-            s"${hd.value.safeDescribe(seen1)} :: ${tl.value.safeDescribe(seen1)}"
-          }
-      }
+@exports
+object DerivedTcB extends DerivedTcB0 {
+  implicit def hnil: DerivedTcB[HNil] =
+    new DerivedTcB[HNil] {
+      def safeDescribe(seen: Set[Any]) = "HNil"
+    }
 
-    implicit def cnil: DerivedTc[CNil] =
-      new DerivedTc[CNil] {
-        def safeDescribe(seen: Set[Any]) = "CNil"
-      }
+  implicit def hcons[H, T <: HList](implicit hd: Lazy[TcB[H]], tl: Lazy[DerivedTcB[T]]): DerivedTcB[H :: T] =
+    new DerivedTcB[H :: T] {
+      def safeDescribe(seen: Set[Any]) =
+        if(seen(this)) "loop (hcons)" else {
+          val seen1 = seen+this
+          s"${hd.value.safeDescribe(seen1)} :: ${tl.value.safeDescribe(seen1)}"
+        }
+    }
 
-    implicit def ccons[H, T <: Coproduct](implicit hd: Lazy[Tc[H]], tl: Lazy[DerivedTc[T]]): DerivedTc[H :+: T] =
-      new DerivedTc[H :+: T] {
-        def safeDescribe(seen: Set[Any]) =
-          if(seen(this)) "loop (ccons)" else {
-            val seen1 = seen+this
-            s"${hd.value.safeDescribe(seen1)} :+: ${tl.value.safeDescribe(seen1)}"
-          }
-      }
-  }
+  implicit def cnil: DerivedTcB[CNil] =
+    new DerivedTcB[CNil] {
+      def safeDescribe(seen: Set[Any]) = "CNil"
+    }
 
-  trait DerivedTc0 {
-    implicit def gen[T, R](implicit gen: Generic.Aux[T, R], mtcr: Lazy[DerivedTc[R]]): DerivedTc[T] =
-      new DerivedTc[T] {
-        def safeDescribe(seen: Set[Any]) =
-          if(seen(this)) "loop (gen)" else {
-            val seen1 = seen+this
-            s"gen(${mtcr.value.safeDescribe(seen1)})"
-          }
-      }
-  }
+  implicit def ccons[H, T <: Coproduct](implicit hd: Lazy[TcB[H]], tl: Lazy[DerivedTcB[T]]): DerivedTcB[H :+: T] =
+    new DerivedTcB[H :+: T] {
+      def safeDescribe(seen: Set[Any]) =
+        if(seen(this)) "loop (ccons)" else {
+          val seen1 = seen+this
+          s"${hd.value.safeDescribe(seen1)} :+: ${tl.value.safeDescribe(seen1)}"
+        }
+    }
+}
+
+trait DerivedTcB0 {
+  implicit def gen[T, R](implicit gen: Generic.Aux[T, R], mtcr: Lazy[DerivedTcB[R]]): DerivedTcB[T] =
+    new DerivedTcB[T] {
+      def safeDescribe(seen: Set[Any]) =
+        if(seen(this)) "loop (gen)" else {
+          val seen1 = seen+this
+          s"gen(${mtcr.value.safeDescribe(seen1)})"
+        }
+    }
 }

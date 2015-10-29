@@ -16,18 +16,22 @@
 
 package instantiator
 
-import export.ExportInstantiated
-import classwithderivation._, higherkinded._
+import export._
+import tca._, tca1._
 
-object tc1instantiator {
-  implicit def instantiate[F[_], T](implicit tc1f: Tc1[F]): ExportInstantiated[Tc[F[T]]] =
-    ExportInstantiated(
-      new Tc[F[T]] {
-        def safeDescribe(seen: Set[Any]) =
-          if(seen(this)) "loop (instantiate)" else {
-            val seen1 = seen+this
-            s"Instantiate ${tc1f.safeDescribe(seen1)}"
-          }
-      }
-    )
+@reexports[InstantiatedTcA]
+object tc1instantiator
+
+trait InstantiatedTcA[T] extends TcA[T]
+
+@exports(Instantiated)
+object InstantiatedTcA {
+  implicit def instantiate[F[_], T](implicit tc1f: TcA1[F]): InstantiatedTcA[F[T]] =
+    new InstantiatedTcA[F[T]] {
+      def safeDescribe(seen: Set[Any]) =
+        if(seen(this)) "loop (instantiate)" else {
+          val seen1 = seen+this
+          s"Instantiate ${tc1f.safeDescribe(seen1)}"
+        }
+    }
 }

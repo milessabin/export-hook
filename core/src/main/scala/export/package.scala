@@ -18,8 +18,8 @@ package object export {
   type ExportHighPriority[+T] = Export0[T]
   val ExportHighPriority = Export0
 
-  type ExportOptional[+T] = Export1[T]
-  val ExportOptional = Export1
+  type ExportOrphan[+T] = Export1[T]
+  val ExportOrphan = Export1
 
   type ExportSubclass[+T] = Export2[T]
   val ExportSubclass = Export2
