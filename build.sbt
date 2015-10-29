@@ -5,7 +5,7 @@ import ReleaseTransformations._
 lazy val buildSettings = Seq(
   organization := "org.typelevel",
   scalaVersion := "2.11.7",
-  crossScalaVersions := Seq("2.10.5", "2.11.7")
+  crossScalaVersions := Seq("2.10.6", "2.11.7")
 )
 
 lazy val commonSettings = Seq(
@@ -21,7 +21,7 @@ lazy val commonSettings = Seq(
     "bintray/non" at "http://dl.bintray.com/non/maven"
   ),
   libraryDependencies ++= Seq(
-    "org.typelevel"  %%% "macro-compat" % "1.0.3",
+    "org.typelevel"  %%% "macro-compat" % "1.0.4",
     "com.chuusai"    %%% "shapeless"    % "2.2.5"    % "test",
     "org.scalatest"  %%% "scalatest"    % "3.0.0-M7" % "test",
     "org.scalacheck" %%% "scalacheck"   % "1.12.4"   % "test",
@@ -81,7 +81,7 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
       // in Scala 2.10, quasiquotes are provided by macro paradise
       case Some((2, 10)) =>
         Seq(
-          "org.scalamacros" %% "quasiquotes" % "2.0.0" cross CrossVersion.binary
+          "org.scalamacros" %% "quasiquotes" % "2.1.0-M5" cross CrossVersion.binary
         )
     }
   }
