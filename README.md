@@ -174,27 +174,27 @@ priorities are, in order from highest to lowest priority,
 
   A catch-all priority higher than any other defined here.
 + `Orphan`
-  
+
   User provided explicit orphan instances.
 + `Subclass`
-  
+
   Instances provided by subclasses, ie. a `Semigroup[T]` provided by a `Monoid[T]`.
 + `Algebraic`
-  
+
   Instances provided by a combination of instances of other classes, combined according to their characteristic laws,
   ie. a `Monoid[T]` provided by a combination of a `Semigroup[T]` with a `Zero[T]`.
 + `Instantiated`
-  
+
   Instances provided by instantiating a higher kinded instances at some first order type, ie. a `Monoid[List[T]]`
   provided by instantiating `MonoidK[List]` at `Int`.
 + `Generic` (default priority if not explicitly specified)
-  
+
   Instances provided by type class derivation using shapeless or any other suitable mechanism.
 + `Default`
-  
+
   Instances which are acceptable in the last resort.
 + `LowPriority`
-  
+
   A catch-all priority lower than any other defined here.
 
 ## The type class user
@@ -332,6 +332,8 @@ channels (Gitter, github, etc.) to be welcoming environments for everyone.
 
 ## Contributors
 
++ Alistair Johnson <alistair.johnson@johnsonusm.com> [@AlistairUSM](https://twitter.com/AlistairUSM)
++ Miles Sabin <miles@milessabin.com> [@milessabin](https://twitter.com/milessabin)
 + Your name here :-)
 
 [sls-7.2]: http://scala-lang.org/files/archive/spec/2.11/07-implicits.html#implicit-parameters
