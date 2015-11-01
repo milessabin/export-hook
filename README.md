@@ -170,30 +170,30 @@ default priority, which is appropiate for instances constructed using type class
 we specify the `Subclass` priority explicitly as an argument to the `@export` annotation. The available instance
 priorities are, in order from highest to lowest priority,
 
-+ HighPriority
++ `HighPriority`
 
   A catch-all priority higher than any other defined here.
-+ Orphan
++ `Orphan`
   
   User provided explicit orphan instances.
-+ Subclass
++ `Subclass`
   
   Instances provided by subclasses, ie. a `Semigroup[T]` provided by a `Monoid[T]`.
-+ Algebraic
++ `Algebraic`
   
   Instances provided by a combination of instances of other classes, combined according to their characteristic laws,
   ie. a `Monoid[T]` provided by a combination of a `Semigroup[T]` with a `Zero[T]`.
-+ Instantiated
++ `Instantiated`
   
   Instances provided by instantiating a higher kinded instances at some first order type, ie. a `Monoid[List[T]]`
   provided by instantiating `MonoidK[List]` at `Int`.
-+ Generic (default priority if not explicitly specified)
++ `Generic` (default priority if not explicitly specified)
   
   Instances provided by type class derivation using shapeless or any other suitable mechanism.
-+ Default
++ `Default`
   
   Instances which are acceptable in the last resort.
-+ LowPriority
++ `LowPriority`
   
   A catch-all priority lower than any other defined here.
 
