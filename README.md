@@ -1,7 +1,7 @@
 # export-hook: minimal dependency support for expanding type class implicit scope
 
-This project is a proof of concept of minimal infrastructure to support the inclusion of derived and subclass
-instances in the implicit scope of a type class without imposing heavyweight dependencies on the type class provider.
+This project provides minimal infrastructure to support the inclusion of derived, subclass and other orphan instances
+in the implicit scope of a type class without imposing heavyweight dependencies on the type class provider.
 
 [![Build Status](https://api.travis-ci.org/milessabin/export-hook.png?branch=master)](https://travis-ci.org/milessabin/export-hook)
 [![Stories in Ready](https://badge.waffle.io/milessabin/export-hook.png?label=Ready)](https://waffle.io/milessabin/export-hook)
@@ -70,126 +70,212 @@ In other words, we want derived and subclass instances to have a priority in-bet
 (in the implicit scope) and very general fallback instances (also in the implicit scope). This is very difficult to
 achieve with orphan instances.
 
-## Dealing with derived and subclass orphans
+## Dealing with derived, subclass and other orphans
 
 [shapeless][shapeless] has an evolving set of mechanisms which help to deal with this problem, but it would be even
-better if we didn't have to deal with it at all, by not producing orphan instances in the first place. One way of
+better if we didn't have to deal with it at all, and not produce orphan instances in the first place. One way of
 achieving this would be for projects which provide type classes to also publish derived and subclass instances
-directly. However, in the derived case this forces a dependency on shapeless on those projects, which might be too
+directly. However, in the derived case this forces a dependency on shapeless onto those projects, which might be too
 heavyweight for them, and it limits shapeless's ability to evolve independently; and in the subclass case it couples
 subclasses and superclasses which can be problematic across module boundaries.
 
-This project is a proof of concept of an alternative mechanism, an _export hook_, which allows derived and subclass
-instances to be inserted into the implicit scope with the appropriate priority _without_ requiring either a shapeless
-dependency or coupling between subclasses and superclasses, hence respecting module boundaries.
+This project is a proof of concept of an alternative mechanism, an _export hook_, which allows derived, subclass and
+other orphan instances to be inserted into the implicit scope of a type class with the appropriate priority _without_
+requiring either a shapeless dependency or coupling between subclasses and superclasses, hence respecting module
+boundaries.
 
-Instead the only dependency would be this project, which currently defines only one trival value class, two
-annotations, and a couple of small Scala macros to support them,
+Instead the only dependency is this project, which has a very small runtime footprint and no further dependencies.
+Value classes and macro inlining have been used to eliminate all runtime overhead relative to directly importing
+external instances.
 
-```scala
-class Export[+T](val instance: T) extends AnyVal
+The project providing type classes, and the other parties, follow the conventions below (`Encoder`, `Decoder`,
+`Codec`, `DerivedEncoder` and `DerivedDecoder` are example user type classes) ...
 
-class exports extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro ExportMacro.exportsImpl
-}
+## The type class provider
 
-class imports[A] extends StaticAnnotation {
-  def macroTransform(annottees: Any*): Any = macro ExportMacro.importsImpl
-}
-```
-
-(value classes and macro inlining have been used to eliminate all runtime overhead relative to directly importing
-external instances).
-
-Additionally, the project providing type classes, and other parties, would have to follow the conventions below (`Tc`,
-`TcSub` and `DerivedTc` are example user type classes),
-...
-
-## As seen by the type class provider
-
-The participating type class provider has to include a hook for a type class deriver. That implies a dependency on
-this project, and a hook trait as part of the stack of prioritized companion object traits,
+The participating type class provider includes a hook for exporters of instances such as type class derivers or
+subclasses. That implies a dependency on this project, and a hook trait as part of the stack of prioritized companion
+object traits,
 
 ```scala
 import export._
 
-trait Tc[T] {
+trait Encoder[T] {
   // Type class defns ...
 }
 
-object Tc extends TcLowPriority {
+object Encoder extends EncoderLowPriority {
   // Instances which should be higher priority than derived
   // or subclass instances should be defined here ...
 }
 
-// Derived and subclass instances of Tc are automatically included here ...
-@imports[Tc]
-trait TcLowPriority {
-  // Instances which should be lower priority than derived
-  // or subclass instances should be defined here ...
+// Derived, subclass and other instances of Encoder are automatically included here ...
+@imports[Encoder]
+trait EncoderLowPriority {
+  // Instances which should be lower priority than imported
+  // instances should be defined here ...
 }
 ```
 
-## As seen by a type class deriver
+(Below we assume a similar set of definitions for the `Decoder` type class).
 
-A type class deriver has to provide an exporter instance which is able to provide instances of the requested types.
-They can do that using shapeless or any other suitable mechanism,
+## The provider of derived, subclass or other instances
+
+A type class deriver provides instances for the requested types using shapeless or any other suitable mechanism and
+indicates that they are to be exported by adding the `@exports` annotation to its companion object,
 
 ```scala
 import export._, shapeless._
 
-// Automatically derive instances of Tc[T] for all T with a shapeless
+// Automatically derive instances of Encoder[T] for all T with a shapeless
 // Generic instance
 
-trait DerivedTc[T] extends Tc[T]
+trait DerivedEncoder[T] extends Encoder[T]
 
 @exports
-object DerivedTc {
-  implicit def hnil: DerivedTc[HNil] = ...
+object DerivedEncoder {
+  implicit def hnil: DerivedEncoder[HNil] = ...
 
   implicit def hcons[H, T <: HList]
-    (implicit hd: Tc[H], tl: Lazy[DerivedTc[T]]): DerivedTc[H :: T] = ...
+    (implicit hd: Encoder[H], tl: Lazy[DerivedEncoder[T]]): DerivedEncoder[H :: T] = ...
 
-  implicit def cnil: DerivedTc[CNil] = ...
+  implicit def cnil: DerivedEncoder[CNil] = ...
 
   implicit def ccons[H, T <: Coproduct]
-    (implicit hd: Tc[H], tl: Lazy[DerivedTc[T]]): DerivedTc[H :+: T] = ...
+    (implicit hd: Encoder[H], tl: Lazy[DerivedEncoder[T]]): DerivedEncoder[H :+: T] = ...
 
   implicit def gen[T, R]
-    (implicit gen: Generic.Aux[T, R], mtcr: DerivedTc[R]): DerivedTc[T] = ...
+    (implicit gen: Generic.Aux[T, R], mtcr: DerivedEncoder[R]): DerivedEncoder[T] = ...
 }
-
 ```
 
-## As seen by a type class subclass
+(Below we assume a similar set of definitions for the `DerivedDecoder` type class).
 
-A type class subclass has to provide an exporter instance which is able to provide instances of the requested types.
-Given that the subclass instances are automatically instances of their superclasses this is trivial,
+A type class subclass provides instances which are automatically instances of their superclasses by virtue of the
+subtype relationship,
 
 ```scala
 import export._
 
-trait TcSub[T] extends Tc[T]
+trait Codec[T] extends Encoder[T] with Decoder[T]
 
-@exports
-object TcSub {
-  implicit val fooInst: TcSub[Foo] = ...
+@exports(Sublcass)
+object Codec {
+  implicit val fooInst: Codec[Foo] = ...
 }
-
 ```
 
-## As seen by the type class user
+Instances can be exported with different relative priorities. In the derivation example they are exported with the
+default priority, which is appropiate for instances constructed using type class derivation. In the subclass example
+we specify the `Subclass` priority explicitly as an argument to the `@export` annotation. The available instance
+priorities are, in order from highest to lowest priority,
 
-The type class user should import both the type class and the type class deriver or subclass,
++ HighPriority
+  A catch-all priority higher than any other defined here.
++ Orphan
+  User provided explicit orphan instances.
++ Subclass
+  Instances provided by subclasses, ie. a `Semigroup[T]` provided by a `Monoid[T]`.
++ Algebraic
+  Instances provided by a combination of instances of other classes, combined according to their characteristic laws,
+  ie. a `Monoid[T]` provided by a combination of a `Semigroup[T]` with a `Zero[T]`.
++ Instantiated
+  Instances provided by instantiating a higher kinded instances at some first order type, ie. a `Monoid[List[T]]`
+  provided by instantiating `MonoidK[List]` at `Int`.
++ Generic (default priority if not explicitly specified)
+  Instances provided by type class derivation using shapeless or any other suitable mechanism.
++ Default
+  Instances which are acceptable in the last resort.
++ LowPriority
+  A catch-all priority lower than any other defined here.
+
+## The type class user
+
+The type class user should import both the type class and the type class deriver or subclass exports,
 
 ```scala
-import Tc
-import DeriverTc.exports._ // for derived instances
-import TcSub.exports._     // for subclass instances
+import Encoder
+import DerivedEncoder.exports._  // for derived instances
+import Codec.exports._           // for subclass instances
 ```
 
-If the type class user doesn't want derived or subclass instances they simply omit the corresponding import in which
+If the type class user doesn't want derived or subclass instances they simply omit the corresponding import, in which
 case they will only see underived base instances.
+
+## Locally modifying the instance priority ordering
+
+The priority ordering of the instance categories is a reasonable default which should do what the user expects in
+almost all circumstances. However, it's important to have an escape hatch for the rare cases where we need to do
+something different. export-hook provides a mechanism for defining a local priority ordering via an implicit
+definition of type `ExportPriority`. The local ordering will be in force only where that implicit definition is in
+scope,
+
+```scala
+import export._
+
+object CustomPrioritization {
+  implicit val priority =
+    ExportPriority[
+      ExportHighPriority,
+      ExportOrphan,
+      ExportSubclass,
+      ExportAlgebraic,
+      ExportGeneric,      // give generic instances a higher priority than instances
+      ExportInstantiated, // constructed from higher kinded instances
+      ExportDefault,
+      ExportLowPriority
+    ]
+}
+
+object ScopeWithDefaultPriority {
+  // Here a Monoid[List[Int]] constructed from a MonoidK[List] will be
+  // selected using the default prioritization ...
+
+  implicitly[Monoid[List[Int]]]
+}
+
+object ScopeWithCustomPriority {
+  import CustomPrioritization._ // instance of ExportPriority now in scope ...
+
+  // Here a Monoid[List[Int]] provided by type class derivation will be
+  // selected using the our custom prioritization ...
+
+  implicitly[Monoid[List[Int]]]
+}
+```
+
+## Bundling and reexporting type class instances
+
+It is sometimes convenient to make multiple orphan type class instances available via a single import. This is
+supported via the `@reexport` annotation. In the example below all the instances defined by `DerivedEncoder` and
+`DerivedDecoder` are made available in the current scope by a single import,
+
+```scala
+trait DerivedEncoder[T] extends Encoder[T]
+@exports
+object DerivedEncoder {
+  // Encoder derivation here ...
+}
+
+trait DerivedDecoder[T] extends Decoder[T]
+@exports
+object DerivedDecorer {
+  // Decoder derivation here ...
+}
+
+// Reexport instances of both type classes via a single object
+@reexports[DerivedEncoder, DerivedDecoder]
+object derivedcodecs
+
+// Client code ...
+
+import derivedcodecs._ // single import
+
+// Instances of both DerivedEncoder and DerivedDecoder are now available via
+// the implicit scope of Encoder and Decoder ...
+```
+
+Reexported instances will have the same priority that they were initially exported with.
 
 ## Current status
 
@@ -217,7 +303,7 @@ export-hook 1.0.0 is Scala 2.11.7 supported via the macro paradise compiler plug
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
-  "org.typelevel" %% "export-hook" % "1.0.1",
+  "org.typelevel" %% "export-hook" % "1.0.2",
   compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
 )
 ```
