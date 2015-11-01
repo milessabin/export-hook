@@ -78,7 +78,7 @@ package tcb {
   // Subclass within the same module
   trait TcBSub[T] extends TcB[T]
 
-  @exports
+  @exports(Subclass)
   object TcBSub extends TcBSubInstances
   trait TcBSubInstances extends TcBSubDefault {
     implicit val fooInst: TcBSub[Foo] =
@@ -102,7 +102,7 @@ package tcbext {
   // Subclass in a different module
   trait TcBExtSub[T] extends TcB[T]
 
-  @exports
+  @exports(Subclass)
   object TcBExtSub extends TcBExtSubInstances
   trait TcBExtSubInstances extends TcBExtSubDefault {
     implicit def barInst: TcBExtSub[Bar] =
