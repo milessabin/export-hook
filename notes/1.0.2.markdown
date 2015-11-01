@@ -1,0 +1,15 @@
+This is the final release of [export-hook-1.0.2][export-hook].
+
+These release notes provide a summary of changes since export-hook 1.0.1.
+
+* Added the ability to export instances with different priorities.
+
+* Added the ability to bundle and reexport multiple instances via a single definition.
+
+Many thanks to everyone who has contributed ideas, enthusiasm and encouragement, in particular [Alistair
+Johnson][inthenow] and [Travis Brown][travisbrown].
+
+[export-hook]: https://github.com/milessabin/export-hook
+[inthenow]: https://twitter.com/AlistairUSM
+[travisbrown]: https://twitter.com/travisbrown
+
