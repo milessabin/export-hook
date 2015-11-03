@@ -159,7 +159,7 @@ import export._
 
 trait Codec[T] extends Encoder[T] with Decoder[T]
 
-@exports(Sublcass)
+@exports(Subclass)
 object Codec {
   implicit val fooInst: Codec[Foo] = ...
 }
