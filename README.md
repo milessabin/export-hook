@@ -311,6 +311,7 @@ export-hook 1.0.0 is Scala 2.11.7 supported via the macro paradise compiler plug
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
+  "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
   "org.typelevel" %% "export-hook" % "1.0.2",
   compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
 )
