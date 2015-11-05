@@ -101,6 +101,9 @@ class ExportMacro(val c: whitebox.Context) {
   def mkStableName(prefix: String, index: Int): TermName =
     TermName(prefix+"$anonimplicit$"+index)
 
+  def mkStableName(prefix: String, index0: Int, index1: Int): TermName =
+    TermName(prefix+"$anonimplicit$"+index0+"$"+index1)
+
   def mkExportDefMacro(tcTpe: Type, exportTc: Type, nme: TermName): Tree = {
     val tcRef = mkAttributedRef(tcTpe)
 
@@ -273,23 +276,22 @@ class ExportMacro(val c: whitebox.Context) {
 
         val reexports =
           for {
-            (cTpe, index) <- forwardees.zipWithIndex
+            (cTpe, index0) <- forwardees.zipWithIndex
             eSym = cTpe.decl(TermName("exports"))
             if eSym != NoSymbol
             eTpe = eSym.infoIn(cTpe)
-            mSym <- eTpe.decls if mSym.isTerm && !mSym.isConstructor && !mSym.asTerm.isAccessor
+            (mSym, index1) <- eTpe.decls.zipWithIndex if mSym.isTerm && !mSym.isConstructor && !mSym.asTerm.isAccessor
           } yield {
             val tSym = mSym.asTerm
             val mTpe = tSym.infoIn(eTpe)
+            val nme = mkStableName(prefix, index0, index1)
             mTpe match {
               case PolyType(List(pSym, _), NullaryMethodType(rTpe)) if tSym.isMacro =>
                 val PolyType(_, TypeBounds(lo, _)) = pSym.infoIn(eTpe)
-                mkExportDefMacro(lo.typeConstructor, rTpe.typeConstructor, mkStableName(prefix, index))
+                mkExportDefMacro(lo.typeConstructor, rTpe.typeConstructor, nme)
               case _ if tSym.isVal =>
-                val nme = mkStableName(prefix, index)
                 mkValForwarder(eTpe, tSym, nme)
               case _ if tSym.isMethod =>
-                val nme = mkStableName(prefix, index)
                 mkMethodForwarder(eTpe, tSym.asMethod, nme)
               case other =>
                 c.abort(c.enclosingPosition, s"Unexpected export definition shape $tSym")
