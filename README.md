@@ -285,6 +285,45 @@ import derivedcodecs._ // single import
 
 Reexported instances will have the same priority that they were initially exported with.
 
+## Exporting and reexporting individual instances
+
+Sometimes it's a little heavyweight to create a new subclass simply to be able to export a handful of ad hoc
+instances. In this case individual instance definitions can be exported by using a val/method level `@export`
+definition marking the definition for export and providing a priority,
+
+```scala
+@exports
+object InstantiatedEmptyK {
+  @export(Instantiated)
+  implicit def instantiate[F[_], T](implicit ekf: EmptyK[F]): Empty[F[T]] = ekf.synthesize[T]
+}
+```
+
+Here we synthesize an instance of the Alleycats `Empty` type class from an instance of the higher-kinded `EmptyK` type
+class. The resulting definition is exported with the `Instantiated` priority and made available by importing in the
+usual way,
+
+```scala
+import InstantiatedEmptyK.exports._
+
+Empty[List[Int]] // synthesized from EmptyK[List]
+```
+
+These individual instances can also be bundled and reexported,
+
+```scala
+@reexports(InstantiatedEmptyK)
+object emptykinst
+```
+
+which allows imports of the form,
+
+```scala
+import emptykinst._
+
+Empty[List[Int]] // synthesized from EmptyK[List]
+```
+
 ## Current status
 
 This is a young project and we are keen to get input from anyone who finds it useful ... please create issues here or
@@ -311,8 +350,8 @@ export-hook 1.0.0 is Scala 2.11.7 supported via the macro paradise compiler plug
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
-  "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
   "org.typelevel" %% "export-hook" % "1.0.2",
+  "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
   compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
 )
 ```

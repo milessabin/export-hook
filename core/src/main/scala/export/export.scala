@@ -44,6 +44,10 @@ class exports extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro ExportMacro.exportsImpl
 }
 
+class export extends StaticAnnotation {
+  def macroTransform(annottees: Any*): Any = macro ExportMacro.exportImpl
+}
+
 class reexports extends StaticAnnotation {
   def macroTransform(annottees: Any*): Any = macro ExportMacro.reexportsImpl
 }
@@ -94,7 +98,10 @@ class ExportMacro(val c: whitebox.Context) {
     global.gen.mkAttributedRef(pre, sym).asInstanceOf[Tree]
   }
 
-  def mkAnonImplicit(tcTpe: Type, exportTc: Type, prefix: String, index: Int): Tree = {
+  def mkStableName(prefix: String, index: Int): TermName =
+    TermName(prefix+"$anonimplicit$"+index)
+
+  def mkExportDefMacro(tcTpe: Type, exportTc: Type, nme: TermName): Tree = {
     val tcRef = mkAttributedRef(tcTpe)
 
     val kind = tcTpe.typeParams.map(_.asType.typeParams.length)
@@ -104,7 +111,7 @@ class ExportMacro(val c: whitebox.Context) {
         case List(1) => "1"
         case List(0, 0) => "00"
         case _ =>
-          c.abort(c.enclosingPosition, "$tc has an unsupported kind")
+          c.abort(c.enclosingPosition, s"$tcTpe has an unsupported kind")
       }
     val (f, fd) = {
       val t = TypeName(c.freshName)
@@ -118,9 +125,9 @@ class ExportMacro(val c: whitebox.Context) {
           case List(1) => q"type $t[$x1[_]] >: $tcRef[$x1]"
           case List(0, 0) => q"type $t[$x, $y] >: $tcRef[$x, $y]"
           case _ =>
-            c.abort(c.enclosingPosition, "$tc has an unsupported kind")
+            c.abort(c.enclosingPosition, s"$tcTpe has an unsupported kind")
         }
-        )
+      )
     }
 
     val (ts: List[TypeName], tds: List[Tree]) = (kind.map { k =>
@@ -130,13 +137,29 @@ class ExportMacro(val c: whitebox.Context) {
 
     val exportTpt = c.internal.gen.mkAttributedRef(exportTc.typeSymbol)
     val exportsImpl = TermName(s"exportsImpl$suffix")
-    val implicitName = TermName(prefix+"$anonimplicit$"+index)
 
     q"""
-    implicit def $implicitName[$fd, ..$tds]: $exportTpt[$f[..$ts]] =
+    implicit def $nme[$fd, ..$tds]: $exportTpt[$f[..$ts]] =
       macro _root_.export.ExportMacro.$exportsImpl[$tcRef, ..$ts, $exportTpt]
       """
   }
+
+  object Export {
+    def unapply(mods: Modifiers): Option[Int] = {
+      val Modifiers(_, _, annots) = mods
+      annots.collectFirst {
+        case Apply(Select(New(tpe), termNames.CONSTRUCTOR), List(Ident(TermName(Priority(i)))))
+          if c.typecheck(tpe, c.TYPEmode, silent = true).tpe =:= typeOf[export] => i
+      }
+    }
+  }
+
+  def stripExport(annots: List[Tree]): List[Tree] =
+    annots.filterNot {
+      case Apply(Select(New(tpe), termNames.CONSTRUCTOR), List(Ident(TermName(Priority(i)))))
+        if c.typecheck(tpe, c.TYPEmode, silent = true).tpe =:= typeOf[export] => true
+      case _ => false
+    }
 
   def exportsImpl(annottees: Tree*): Tree = {
     annottees match {
@@ -153,17 +176,49 @@ class ExportMacro(val c: whitebox.Context) {
           case _ => true
         }
 
+        val prefix = c.internal.enclosingOwner.fullName.replace('.', '$')+"$"+termName
+
         val tc = Ident(termName.toTypeName)
-        val tcTpe = c.typecheck(tc, c.TYPEmode).tpe.typeConstructor
-        val prefix = c.internal.enclosingOwner.fullName.replace('.', '$')+"$$"+termName
-        val anonImplicit = mkAnonImplicit(tcTpe, exportTcs(priority), prefix, 0)
+        val typed = c.typecheck(tc, c.TYPEmode, silent = true)
+
+        val exports0 =
+          if(typed != EmptyTree) {
+            val tcTpe = typed.tpe.typeConstructor
+            List(mkExportDefMacro(tcTpe, exportTcs(priority), mkStableName(prefix, 0)))
+          } else Nil
+
+        val exports1 = {
+          body.zipWithIndex.collect {
+            case (ValDef(mods @ Export(priority), nme0, tpt, rhs), i) =>
+              val eTpt = c.internal.gen.mkAttributedRef(exportTcs(priority).typeSymbol)
+              val appTpt = tq""" $eTpt[$tpt] """
+              val nme = mkStableName(prefix, i+1)
+              q""" implicit val $nme: $appTpt = new $appTpt($nme0) """
+
+            case (d@DefDef(mods @ Export(priority), nme0, tparams, vparamss, tpt, rhs), i) =>
+              val eTpt = c.internal.gen.mkAttributedRef(exportTcs(priority).typeSymbol)
+              val appTpt = tq""" $eTpt[$tpt] """
+              val nme = mkStableName(prefix, i+1)
+              val Modifiers(flags, nme0, annots) = mods
+              val fMods = Modifiers(flags, nme0, stripExport(annots).map(_.duplicate))
+              val targs = tparams.map(_.name)
+              val vargss = vparamss.map(_.map(_.name))
+              val fNme = d.name.toTermName
+              val fRhs = q""" new $appTpt($fNme[..$targs](...$vargss)) """
+              DefDef(fMods, nme, tparams.map(_.duplicate), vparamss.map(_.map(_.duplicate)), appTpt, fRhs)
+          }
+        }
+
+        val exports = exports0 ++ exports1
+        if(exports.isEmpty)
+          c.abort(c.enclosingPosition, s"$termName has no exportable definitions")
 
         q"""
           $mods object $termName extends ..$parents { $self =>
             object exports {
               import scala.language.experimental.macros
 
-              $anonImplicit
+              ..$exports
             }
             ..$body
           }
@@ -174,6 +229,10 @@ class ExportMacro(val c: whitebox.Context) {
     }
   }
 
+  def exportImpl(annottees: Tree*): Tree = {
+    q""" ..$annottees """
+  }
+
   def reexportsImpl(annottees: Tree*): Tree = {
     annottees match {
       case List(m @ ModuleDef(mods, termName, Template(parents, self, body0))) =>
@@ -182,30 +241,66 @@ class ExportMacro(val c: whitebox.Context) {
           case _ => true
         }
 
-        val prefix = c.internal.enclosingOwner.fullName.replace('.', '$')+"$$"+termName
+        val prefix = c.internal.enclosingOwner.fullName.replace('.', '$')+"$"+termName
 
-        val tcs =
+        val forwardees0 =
           c.prefix.tree match {
-            case Apply(Select(New(AppliedTypeTree(_, tcs)), _), _) => tcs.zipWithIndex
-            case _ => c.abort(c.enclosingPosition, "No reexports specified.")
+            case Apply(Select(New(AppliedTypeTree(_, tcs)), _), _) =>
+              tcs map { tc =>
+                val typed = c.typecheck(tc, c.TYPEmode, silent = true)
+                if(typed == EmptyTree)
+                  c.abort(c.enclosingPosition, s"$tc not found for reexport.")
+                typed.tpe.typeConstructor.companion
+              }
+            case _ => Nil
           }
 
-        val anonImplicits =
+        val forwardees1 =
+          c.prefix.tree match {
+            case Apply(_, terms) =>
+              terms.map { term =>
+                val typed = c.typecheck(term, c.TERMmode, silent = true)
+                if(typed == EmptyTree)
+                  c.abort(c.enclosingPosition, s"$term not found for reexport.")
+                typed.tpe
+              }
+            case _ => Nil
+          }
+
+        val forwardees = forwardees0 ++ forwardees1
+        if(forwardees.isEmpty)
+          c.abort(c.enclosingPosition, "No reexports specified.")
+
+        val reexports =
           for {
-            (tc, index) <- tcs
-            tcTpe = c.typecheck(tc, c.TYPEmode, silent = true).tpe.typeConstructor if !(tcTpe =:= NoType)
-            cTpe = tcTpe.companion
-            eTpe = cTpe.decl(TermName("exports")).infoIn(cTpe)
-            mSym <- eTpe.decls if !mSym.isConstructor
-            PolyType(List(pSym, _), NullaryMethodType(rTpe)) = mSym.infoIn(eTpe)
-            PolyType(_, TypeBounds(lo, _)) = pSym.infoIn(eTpe)
-          } yield mkAnonImplicit(lo.typeConstructor, rTpe.typeConstructor, prefix, index)
+            (cTpe, index) <- forwardees.zipWithIndex
+            eSym = cTpe.decl(TermName("exports"))
+            if eSym != NoSymbol
+            eTpe = eSym.infoIn(cTpe)
+            mSym <- eTpe.decls if mSym.isTerm && !mSym.isConstructor && !mSym.asTerm.isAccessor
+          } yield {
+            val tSym = mSym.asTerm
+            val mTpe = tSym.infoIn(eTpe)
+            mTpe match {
+              case PolyType(List(pSym, _), NullaryMethodType(rTpe)) if tSym.isMacro =>
+                val PolyType(_, TypeBounds(lo, _)) = pSym.infoIn(eTpe)
+                mkExportDefMacro(lo.typeConstructor, rTpe.typeConstructor, mkStableName(prefix, index))
+              case _ if tSym.isVal =>
+                val nme = mkStableName(prefix, index)
+                mkValForwarder(eTpe, tSym, nme)
+              case _ if tSym.isMethod =>
+                val nme = mkStableName(prefix, index)
+                mkMethodForwarder(eTpe, tSym.asMethod, nme)
+              case other =>
+                c.abort(c.enclosingPosition, s"Unexpected export definition shape $tSym")
+            }
+          }
 
         q"""
           $mods object $termName extends ..$parents { $self =>
             import scala.language.experimental.macros
 
-            ..$anonImplicits
+            ..$reexports
 
             ..$body
           }
@@ -214,6 +309,67 @@ class ExportMacro(val c: whitebox.Context) {
       case other =>
         c.abort(c.enclosingPosition, "Unexpected tree shape.")
     }
+  }
+
+  def mkTypeTree(tpe: Type, tparams: Set[Symbol], vparams: Set[Symbol]): Tree = {
+    tpe match {
+      case TypeRef(pre, sym, args) =>
+        val tpt =
+          if(tparams contains sym)
+            Ident(sym.name)
+          else
+            c.internal.gen.mkAttributedRef(pre, sym)
+        val argts = args.map(mkTypeTree(_, tparams, vparams))
+        tq""" $tpt[..$argts] """
+      case tparam if tparams contains tparam.typeSymbol =>
+        val nme = tparam.typeSymbol.name
+        Ident(nme)
+      case other =>
+        Ident(other.typeSymbol)
+    }
+  }
+
+  def mkTypeParam(pre: Type, sym: Symbol, tparams: Set[Symbol], vparams: Set[Symbol]): TypeDef = {
+    val tpe = sym.infoIn(pre)
+    val nme = sym.name.toTypeName
+    val mods = Modifiers(Flag.PARAM)
+    tpe match {
+      case TypeBounds(lo, hi) =>
+        val loTpt = mkTypeTree(lo, tparams, vparams)
+        val hiTpt = mkTypeTree(hi, tparams, vparams)
+        q" $mods type $nme >: $loTpt <: $hiTpt "
+      case PolyType(tps, TypeBounds(lo, hi)) =>
+        val loTpt = mkTypeTree(lo, tparams, vparams)
+        val hiTpt = mkTypeTree(hi, tparams, vparams)
+        q" $mods type $nme[..${tps.map(mkTypeParam(pre, _, tparams ++ tps, vparams))}] >: $loTpt <: $hiTpt "
+      case _ =>
+        c.abort(c.enclosingPosition, "Unsupported kind $sym")
+    }
+  }
+
+  def mkValParam(pre: Type, sym: Symbol, tparams: Set[Symbol], vparams: Set[Symbol]): ValDef = {
+    val tpe = mkTypeTree(sym.infoIn(pre), tparams, vparams)
+    val nme = sym.name.toTermName
+    val mods = if(sym.isImplicit) Modifiers(Flag.PARAM | Flag.IMPLICIT) else Modifiers(Flag.PARAM)
+    q" $mods val $nme: $tpe "
+  }
+
+  def mkMethodForwarder(pre: Type, sym: MethodSymbol, nme: TermName): Tree = {
+    val mRef = c.internal.gen.mkAttributedRef(pre, sym)
+    val tparams = sym.typeParams.toSet
+    val vparams = sym.paramLists.flatten.toSet
+    val tdefs = sym.typeParams.map(mkTypeParam(pre, _, tparams, vparams))
+    val targs = tdefs.map(_.name)
+    val vdefss = sym.paramLists.map(_.map(mkValParam(pre, _, tparams, vparams)))
+    val vargss = vdefss.map(_.map(_.name))
+    val resTpe = mkTypeTree(sym.returnType, tparams, vparams)
+    q""" implicit def $nme[..$tdefs](...$vdefss): $resTpe = $mRef[..$targs](...$vargss) """
+  }
+
+  def mkValForwarder(pre: Type, sym: TermSymbol, nme: TermName): Tree = {
+    val tpe = sym.infoIn(pre)
+    val ref = c.internal.gen.mkAttributedRef(pre, sym)
+    q""" implicit val $nme: $tpe = $ref """
   }
 
   def exportsImpl0[TC[_], T, E[_]]
@@ -257,7 +413,7 @@ class ExportMacro(val c: whitebox.Context) {
         case List(1) => "1"
         case List(0, 0) => "00"
         case _ =>
-          c.abort(c.enclosingPosition, "$tc has an unsupported kind")
+          c.abort(c.enclosingPosition, s"$tc has an unsupported kind")
       }
 
     annottees match {
