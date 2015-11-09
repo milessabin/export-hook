@@ -74,15 +74,13 @@ trait EmptyInstances
     }
 }
 
-object EmptyK extends EmptyK0 {
+@imports[EmptyK]
+object EmptyK {
   implicit def listEmptyK: EmptyK[List] =
     new EmptyK[List] {
       def empty[A]: List[A] = Nil
     }
 }
-
-@imports[EmptyK]
-trait EmptyK0
 
 @exports
 object InstantiatedEmptyK {
@@ -92,6 +90,11 @@ object InstantiatedEmptyK {
 
 @reexports(InstantiatedEmptyK)
 object emptykinst
+
+trait Foo[T]
+
+@imports[Foo]
+object Foo
 
 object TestExports {
   Monad[List]
