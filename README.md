@@ -356,6 +356,11 @@ libraryDependencies ++= Seq(
 )
 ```
 
+## Binary compatibility
+
+As of version 1.0.3 macro-compat uses [MiMa][mima] to verify binary compatibility within minor versions. export-hook
+is binary compatible within minor versions from 1.0.2 onwards.
+
 ## Building export-hook
 
 export-hook is built with SBT 0.13.9 or later, and its master branch is built with Scala 2.11.7 by default.

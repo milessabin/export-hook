@@ -2,6 +2,12 @@ import com.typesafe.sbt.pgp.PgpKeys.publishSigned
 import org.scalajs.sbtplugin.cross.CrossProject
 import ReleaseTransformations._
 
+import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
+import com.typesafe.tools.mima.plugin.MimaKeys
+import MimaKeys.{previousArtifact, binaryIssueFilters}
+import com.typesafe.tools.mima.core._
+import com.typesafe.tools.mima.core.ProblemFilters._
+
 lazy val buildSettings = Seq(
   organization := "org.typelevel",
   scalaVersion := "2.11.7",
@@ -57,13 +63,14 @@ lazy val root = project.in(file("."))
 lazy val core = crossProject.crossType(CrossType.Pure)
   .settings(moduleName := "export-hook")
   .settings(coreSettings:_*)
+  .settings(mimaSettings:_*)
   .jsSettings(commonJsSettings:_*)
   .jvmSettings(commonJvmSettings:_*)
 
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
-addCommandAlias("validate", ";root;compile;test")
+addCommandAlias("validate", ";root;compile;mima-report-binary-issues;test")
 addCommandAlias("release-all", ";root;release")
 addCommandAlias("js", ";project coreJS")
 addCommandAlias("jvm", ";project coreJVM")
@@ -121,6 +128,19 @@ lazy val publishSettings = Seq(
       </developer>
     </developers>
   )
+)
+
+lazy val mimaSettings = mimaDefaultSettings ++ Seq(
+  previousArtifact := Some(organization.value %% moduleName.value % "1.0.2"),
+
+  binaryIssueFilters ++= {
+    // Filtering the methods that were added since the checked version
+    // (these only break forward compatibility, not the backward one)
+    Seq(
+      ProblemFilters.exclude[MissingMethodProblem]("export.ExportMacro.Priority"),
+      ProblemFilters.exclude[MissingMethodProblem]("export.ExportMacro.mkAnonImplicit")
+    )
+  }
 )
 
 lazy val noPublishSettings = Seq(
