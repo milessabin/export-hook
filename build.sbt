@@ -21,7 +21,7 @@ lazy val commonSettings = Seq(
     "bintray/non" at "http://dl.bintray.com/non/maven"
   ),
   libraryDependencies ++= Seq(
-    "org.typelevel"        %%% "macro-compat"  % "1.0.6",
+    "org.typelevel"        %%% "macro-compat"  % "1.1.0",
     "com.chuusai"          %%% "shapeless"     % "2.2.5"          % "test",
     "com.github.mpilquist" %%% "simulacrum"    % "0.5.0-SNAPSHOT" % "test",
     "org.scalatest"        %%% "scalatest"     % "3.0.0-M7"       % "test",

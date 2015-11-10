@@ -222,7 +222,7 @@ class ExportMacro(val c: whitebox.Context) {
               val fMods = Export.strip(mods)
               val targs = tparams.map(_.name)
               val vargss = vparamss.map(_.map(_.name))
-              val fNme = nme0
+              val fNme = nme0.toTermName
               val fRhs = q""" new $appTpt($fNme[..$targs](...$vargss)) """
               DefDef(fMods, nme, tparams.map(_.duplicate), vparamss.map(_.map(_.duplicate)), appTpt, fRhs)
           }
