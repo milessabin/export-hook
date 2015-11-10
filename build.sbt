@@ -131,14 +131,12 @@ lazy val publishSettings = Seq(
 )
 
 lazy val mimaSettings = mimaDefaultSettings ++ Seq(
-  previousArtifact := Some(organization.value %% moduleName.value % "1.0.2"),
+  previousArtifact := None, //Some(organization.value %% moduleName.value % "1.0.3"),
 
   binaryIssueFilters ++= {
     // Filtering the methods that were added since the checked version
     // (these only break forward compatibility, not the backward one)
     Seq(
-      ProblemFilters.exclude[MissingMethodProblem]("export.ExportMacro.Priority"),
-      ProblemFilters.exclude[MissingMethodProblem]("export.ExportMacro.mkAnonImplicit")
     )
   }
 )
