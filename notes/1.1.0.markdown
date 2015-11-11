@@ -1,0 +1,15 @@
+This is the final release of [export-hook-1.1.0][export-hook].
+
+These release notes provide a summary of changes since export-hook 1.0.2.
+
++ Added an @export annotation for (re)export of individually annotated instances.
+
++ Added support for @imports directly on a type class companion, avoiding the need for redundant low priority traits
+  in simple cases.
+
++ Added [MiMa][mima] to the build.
+
+Many thanks to everyone who has contributed ideas, enthusiasm and encouragement.
+
+[export-hook]: https://github.com/milessabin/export-hook
+[mima]: https://github.com/typesafehub/migration-manager

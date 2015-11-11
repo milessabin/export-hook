@@ -350,7 +350,7 @@ export-hook 1.0.0 is Scala 2.11.7 supported via the macro paradise compiler plug
 scalaVersion := "2.11.7"
 
 libraryDependencies ++= Seq(
-  "org.typelevel" %% "export-hook" % "1.0.2",
+  "org.typelevel" %% "export-hook" % "1.1.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
   compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
 )
@@ -358,8 +358,8 @@ libraryDependencies ++= Seq(
 
 ## Binary compatibility
 
-As of version 1.0.3 macro-compat uses [MiMa][mima] to verify binary compatibility within minor versions. export-hook
-is binary compatible within minor versions from 1.0.2 onwards.
+As of version 1.1.0 export-hook uses [MiMa][mima] to verify binary compatibility within minor versions. export-hook
+is binary compatible within minor versions from 1.1.0 onwards.
 
 ## Building export-hook
 
