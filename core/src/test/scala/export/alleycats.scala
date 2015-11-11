@@ -108,3 +108,14 @@ object TestExports {
   import emptykinst._
   Empty[List[Int]]
 }
+
+@reexports[Bar]
+object rebar
+
+trait Bar[A, B]
+
+@exports
+object Bar {
+  //@export(Orphan)
+  implicit def barInstance[A, B]: Bar[A, B] = ???
+}

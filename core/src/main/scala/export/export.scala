@@ -286,7 +286,7 @@ class ExportMacro(val c: whitebox.Context) {
           val mTpe = tSym.infoIn(eTpe)
           val nme = mkStableName(prefix, index0, index1)
           mTpe match {
-            case PolyType(List(pSym, _), NullaryMethodType(rTpe)) if tSym.isMacro =>
+            case PolyType(List(pSym, _*), NullaryMethodType(rTpe)) if tSym.isMacro =>
               val PolyType(_, TypeBounds(lo, _)) = pSym.infoIn(eTpe)
               mkExportDefMacro(lo.typeConstructor, rTpe.typeConstructor, nme)
             case _ if tSym.isVal =>
