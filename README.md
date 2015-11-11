@@ -357,7 +357,7 @@ libraryDependencies ++= Seq(
 ```
 
 export-hook requires SBT 0.13.9 or later, and will cause a `NullPointerException` to be thrown at compile time for
-earlier versions (see issue #13).
+earlier versions (see issue [#13](https://github.com/milessabin/export-hook/issues/13)).
 
 The SBT version can be configured in `/project/build.properties`:
 
