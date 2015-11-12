@@ -185,7 +185,7 @@ priorities are, in order from highest to lowest priority,
   ie. a `Monoid[T]` provided by a combination of a `Semigroup[T]` with a `Zero[T]`.
 + `Instantiated`
 
-  Instances provided by instantiating a higher kinded instances at some first order type, ie. a `Monoid[List[T]]`
+  Instances provided by instantiating a higher kinded instance at some first order type, ie. a `Monoid[List[Int]]`
   provided by instantiating `MonoidK[List]` at `Int`.
 + `Generic` (default priority if not explicitly specified)
 
