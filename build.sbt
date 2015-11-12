@@ -28,10 +28,10 @@ lazy val commonSettings = Seq(
   ),
   libraryDependencies ++= Seq(
     "org.typelevel"        %%% "macro-compat"  % "1.1.0",
-    "com.chuusai"          %%% "shapeless"     % "2.2.5"          % "test",
-    "com.github.mpilquist" %%% "simulacrum"    % "0.5.0-SNAPSHOT" % "test",
-    "org.scalatest"        %%% "scalatest"     % "3.0.0-M7"       % "test",
-    "org.scalacheck"       %%% "scalacheck"    % "1.12.4"         % "test",
+    "com.chuusai"          %%% "shapeless"     % "2.2.5"    % "test",
+    "com.github.mpilquist" %%% "simulacrum"    % "0.5.0"    % "test",
+    "org.scalatest"        %%% "scalatest"     % "3.0.0-M7" % "test",
+    "org.scalacheck"       %%% "scalacheck"    % "1.12.4"   % "test",
 
     compilerPlugin("org.spire-math" %% "kind-projector" % "0.5.4")
   ),
