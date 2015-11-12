@@ -387,8 +387,10 @@ channels (Gitter, github, etc.) to be welcoming environments for everyone.
 
 ## Contributors
 
++ Age Mooij <age.mooij@gmail.com> [@agemooij](https://twitter.com/agemooij)
 + Alistair Johnson <alistair.johnson@johnsonusm.com> [@AlistairUSM](https://twitter.com/AlistairUSM)
 + Miles Sabin <miles@milessabin.com> [@milessabin](https://twitter.com/milessabin)
++ Nicolas Rinaudo <nicolas@nrinaudo.com> [@NicolasRinaudo](https://twitter.com/NicolasRinaudo)
 + Your name here :-)
 
 [sls-7.2]: http://scala-lang.org/files/archive/spec/2.11/07-implicits.html#implicit-parameters
@@ -405,3 +407,4 @@ channels (Gitter, github, etc.) to be welcoming environments for everyone.
 [ci]: https://travis-ci.org/milessabin/export-hook
 [circe]: https://github.com/travisbrown/circe
 [kittens]: https://github.com/milessabin/kittens
+[mima]: https://github.com/typesafehub/migration-manager
