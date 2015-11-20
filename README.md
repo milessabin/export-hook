@@ -324,6 +324,33 @@ import emptykinst._
 Empty[List[Int]] // synthesized from EmptyK[List]
 ```
 
+## Exporting and reexporting with type refinements
+
+In order to avoid ambiguities with a blanket export, each individual definition will need an `@export` added.
+
+```scala
+trait RefinedExporter[T] extends Exporter[T]{
+  type Out
+  
+  def wrap(t: T): Out
+}
+
+@exports
+object RefinedExporter{
+  type Aux[T, Out0] = RefinedExporter[T]{ type Out = Out0 }
+  
+  @export
+  implicit def refined[T]: Aux[T, //rest of definition ...
+}```
+
+In the case of reexporting, the type refinement will need to be provided at the reexportation site.
+
+```scala
+@reexports[RefinedExporter]
+object AllExporters{
+  implicit def apply[T](implicit exp: RefinedExporter[T]): RefinedExporter.Aux[T, exp.Out] = exp
+}```
+
 ## Current status
 
 This is a young project and we are keen to get input from anyone who finds it useful ... please create issues here or
