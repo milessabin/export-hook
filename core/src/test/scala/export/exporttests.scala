@@ -144,3 +144,19 @@ class CustomPriorityTests extends FunSuite {
       "gen(gen(TcA[Int] :: loop (gen) :: HNil) :+: gen(HNil) :+: CNil)")
   }
 }
+
+class TypeTests extends FunSuite {
+  import tpedefns._
+
+  test("Higher[List,Int]"){
+    assert(Higher[List,Int].describe === "Higher[List, Int]")
+  }
+
+  test("Higher2[List, Int, Int]"){
+    assert(Higher2[List,Int,Int].describe === "Higher2[List, Int, Int]")
+  }
+
+  test("Triple[Int, Int, Int]"){
+    assert(Triple[Int,Int,Int].describe === "Triple[Int, Int, Int]")
+  }
+}

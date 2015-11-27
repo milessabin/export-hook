@@ -137,6 +137,9 @@ lazy val mimaSettings = mimaDefaultSettings ++ Seq(
     // Filtering the methods that were added since the checked version
     // (these only break forward compatibility, not the backward one)
     Seq(
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl10"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl000"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl100")
     )
   }
 )

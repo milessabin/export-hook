@@ -122,6 +122,9 @@ class ExportMacro(val c: whitebox.Context) {
         case List(0) => "0"
         case List(1) => "1"
         case List(0, 0) => "00"
+        case List(1, 0) => "10"
+        case List(0, 0, 0) =>"000"
+        case List(1, 0, 0) => "100"
         case _ =>
           c.abort(c.enclosingPosition, s"$tcTpe has an unsupported kind")
       }
@@ -130,12 +133,16 @@ class ExportMacro(val c: whitebox.Context) {
       val x = TypeName(c.freshName)
       val x1 = TypeName(c.freshName)
       val y = TypeName(c.freshName)
+      val z = TypeName(c.freshName)
       (
         t,
         kind match {
           case List(0) => q"type $t[$x] >: $tcRef[$x]"
           case List(1) => q"type $t[$x1[_]] >: $tcRef[$x1]"
           case List(0, 0) => q"type $t[$x, $y] >: $tcRef[$x, $y]"
+          case List(1, 0) => q"type $t[$x1[_], $y] >: $tcRef[$x1, $y]"
+          case List(0, 0, 0) => q"type $t[$x, $y, $z] >: $tcRef[$x, $y, $z]"
+          case List(1, 0, 0) => q"type $t[$x1[_], $y, $z] >: $tcRef[$x1, $y, $z]"
           case _ =>
             c.abort(c.enclosingPosition, s"$tcTpe has an unsupported kind")
         }
@@ -391,8 +398,24 @@ class ExportMacro(val c: whitebox.Context) {
     exportsImplAux(tcTag.tpe.typeConstructor, List(tTag.tpe.typeConstructor), eTag.tpe)
 
   def exportsImpl00[TC[_, _], T, U, E[_]]
-    (implicit tcTag: WeakTypeTag[TC[_, _]], tTag: WeakTypeTag[T], uTag: WeakTypeTag[U], eTag: WeakTypeTag[E[_]]): Tree =
+    (implicit tcTag: WeakTypeTag[TC[_, _]], tTag: WeakTypeTag[T], uTag: WeakTypeTag[U], 
+              eTag: WeakTypeTag[E[_]]): Tree =
     exportsImplAux(tcTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe), eTag.tpe)
+
+  def exportsImpl10[TC[_[_], _], T[_], U, E[_]]
+    (implicit tcTag: WeakTypeTag[TC[Any, _]], tTag: WeakTypeTag[T[_]], uTag: WeakTypeTag[U], 
+              eTag: WeakTypeTag[E[_]]): Tree =
+    exportsImplAux(tcTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe), eTag.tpe)
+
+  def exportsImpl000[TC[_, _, _], T, U, V, E[_]]
+    (implicit tcTag: WeakTypeTag[TC[_, _, _]], tTag: WeakTypeTag[T], uTag: WeakTypeTag[U], 
+              vTag: WeakTypeTag[V], eTag: WeakTypeTag[E[_]]): Tree =
+    exportsImplAux(tcTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe, vTag.tpe), eTag.tpe)
+
+  def exportsImpl100[TC[_[_], _, _], T[_], U, V, E[_]]
+    (implicit tcTag: WeakTypeTag[TC[Any, _, _]], tTag: WeakTypeTag[T[_]], uTag: WeakTypeTag[U], 
+              vTag: WeakTypeTag[V], eTag: WeakTypeTag[E[_]]): Tree =
+    exportsImplAux(tcTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe, vTag.tpe), eTag.tpe)
 
   def exportsImplAux(tcTpe: Type, tTpes: List[Type], eTpe: Type): Tree = {
     val appTpe = appliedType(tcTpe, tTpes)
