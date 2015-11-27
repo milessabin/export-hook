@@ -446,6 +446,9 @@ class ExportMacro(val c: whitebox.Context) {
         case List(0) => "0"
         case List(1) => "1"
         case List(0, 0) => "00"
+        case List(1, 0) => "10"
+        case List(0, 0, 0) => "000"
+        case List(1, 0, 0) => "100"
         case _ =>
           c.abort(c.enclosingPosition, s"$tc has an unsupported kind")
       }
@@ -501,6 +504,18 @@ class ExportMacro(val c: whitebox.Context) {
 
   def importImpl00[F[_, _], T, U](implicit fTag: WeakTypeTag[F[_, _]], tTag: WeakTypeTag[T], uTag: WeakTypeTag[U]): Tree =
     importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe))
+
+  def importImpl10[F[_[_], _], T[_], U]
+    (implicit fTag: WeakTypeTag[F[Any, _]], tTag: WeakTypeTag[T[_]], uTag: WeakTypeTag[U]): Tree =
+    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe))
+
+  def importImpl000[F[_, _, _], T, U, V]
+    (implicit fTag: WeakTypeTag[F[_, _, _]], tTag: WeakTypeTag[T], uTag: WeakTypeTag[U], vTag: WeakTypeTag[V]): Tree =
+    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe, vTag.tpe))
+
+  def importImpl100[F[_[_], _, _], T[_], U, V]
+    (implicit fTag: WeakTypeTag[F[Any, _, _]], tTag: WeakTypeTag[T[_]], uTag: WeakTypeTag[U], vTag: WeakTypeTag[V]): Tree =
+    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe, vTag.tpe))
 
   def importImplAux(fTpe: Type, tTpes: List[Type]): Tree = {
     val instTpe = appliedType(fTpe, tTpes)
