@@ -139,7 +139,10 @@ lazy val mimaSettings = mimaDefaultSettings ++ Seq(
     Seq(
       exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl10"),
       exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl000"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl100")
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl100"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl10"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl000"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl100")
     )
   }
 )
