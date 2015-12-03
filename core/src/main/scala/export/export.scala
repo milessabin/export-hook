@@ -453,7 +453,8 @@ class ExportMacro(val c: whitebox.Context) {
           c.abort(c.enclosingPosition, s"$tc has an unsupported kind")
       }
 
-    val methName = TermName(c.freshName)
+    val prefix = c.internal.enclosingOwner.fullName.replace('.', '$')+"$"
+
     val (ts: List[TypeName], tds: List[Tree]) = (kind.map { k =>
       val t = TypeName(c.freshName)
       (t, if(k == 0) q"type $t" else q"type $t[_]")
@@ -463,9 +464,10 @@ class ExportMacro(val c: whitebox.Context) {
 
     annottees match {
       case List(ClassDef(mods, typeName, List(), impl)) =>
-        val lpName = TypeName(c.freshName)
+        val lpName = TypeName("LowPriority")
         val lpClass = ClassDef(mods, lpName, List(), impl)
         val termName = typeName.toTermName
+        val methName = TermName(prefix+typeName)
 
         q"""
           $mods trait $typeName extends $termName.$lpName {
@@ -478,6 +480,7 @@ class ExportMacro(val c: whitebox.Context) {
         """
 
       case List(q"$mods object $termName extends ..$parents { $self => ..$body }") =>
+        val methName = TermName(prefix+termName)
 
         q"""
           $mods object $termName extends ..$parents { $self =>
