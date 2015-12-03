@@ -43,7 +43,7 @@ object Boilerplate {
     tgtFile
   }
 
-  val maxArity = 22
+  val maxArity = 6
 
   final class TemplateVals(val arity: Int, prefix: String = "A") {
     private val a = prefix.toLowerCase
@@ -140,7 +140,7 @@ object Boilerplate {
         |            case t => t
         |          }
         |        case t => t
-        |    }
+        |      }
         |    val exportTc = eTpe.typeConstructor
         |    val exportTpe = appliedType(exportTc, appliedType(tcTpe, tTpes))
         |    q"new $$exportTpe($$st)"

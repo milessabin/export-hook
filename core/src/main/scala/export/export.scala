@@ -117,17 +117,18 @@ class ExportMacro(val c: whitebox.Context) {
     val tcRef = mkAttributedRef(tcTpe)
 
     val kind = tcTpe.typeParams.map(_.asType.typeParams.length)
-    if(kind.exists(_ > 1) || kind.size > 22)
+    if(kind.exists(_ > 1) || kind.size > 6)
           c.abort(c.enclosingPosition, s"$tcTpe has an unsupported kind")
     val suffix = kind.mkString("")
     val f = TypeName(c.freshName)
     val fd = {
       val ns = kind.map{ _ => TypeName(c.freshName) }
-      val itpe = (kind zip ns).map{
-        case (0, x) => TypeDef(Modifiers(Flag.PARAM), x, List(), TypeBoundsTree(EmptyTree, EmptyTree))
-        case (1, x) => TypeDef(Modifiers(Flag.PARAM), x, List(TypeDef(Modifiers(Flag.PARAM), typeNames.WILDCARD, List(), TypeBoundsTree(EmptyTree, EmptyTree))), TypeBoundsTree(EmptyTree, EmptyTree))
+      val itpe = (kind zip ns).map{ 
+        case (n, x) =>
+          val wilds = List.fill(n)(TypeDef(Modifiers(Flag.PARAM), typeNames.WILDCARD, List(), TypeBoundsTree(EmptyTree, EmptyTree)))
+          TypeDef(Modifiers(Flag.PARAM), x, wilds, TypeBoundsTree(EmptyTree, EmptyTree))
       }
-      val bounds = TypeBoundsTree(AppliedTypeTree(tcRef, ns.map{x => Ident(x)}), EmptyTree)
+      val bounds = TypeBoundsTree(AppliedTypeTree(tcRef, ns.map(Ident(_))), EmptyTree)
 
       TypeDef(Modifiers(Flag.DEFERRED), f, itpe, bounds)
     }
@@ -232,7 +233,6 @@ class ExportMacro(val c: whitebox.Context) {
             ..$body
           }
         """
-
       case other =>
         c.abort(c.enclosingPosition, "Unexpected tree shape.")
     }
