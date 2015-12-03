@@ -19,6 +19,22 @@
 import export.{export, exports, imports}
 import org.scalatest.FunSuite
 
+trait Higher0[M[_]]{
+  def describe: String
+}
+
+@exports
+object Higher0 extends LowerPriorityHigher0{
+  def apply[M[_]](implicit h: Higher0[M]) = h
+
+  implicit def l = new Higher0[List]{
+    def describe = "Higher[List]"
+  }
+}
+
+@imports[Higher0]
+trait LowerPriorityHigher0
+
 trait Higher1[M[_], A]{
   def describe: String
 }
@@ -53,6 +69,22 @@ object Higher2 extends LowerPriorityHigher2{
 @imports[Higher2]
 trait LowerPriorityHigher2
 
+trait Higher6[M[_], A, B, C, D, E, F]{
+  def describe: String
+}
+
+@exports
+object Higher6 extends LowerPriorityHigher6{
+  def apply[M[_], A, B, C, D, E, F](implicit h: Higher6[M, A, B, C, D, E, F]) = h
+
+  @export
+  implicit def lint = new Higher6[List, Int, Int, Int, Int, Int, Int]{
+    def describe: String = "Higher6[List, Int, Int, Int, Int, Int, Int]"
+  }
+}
+
+trait LowerPriorityHigher6
+
 trait Triple[A, B, C]{
   def describe: String
 }
@@ -72,12 +104,20 @@ trait LowerPriorityTriple
 
 class TypeTests extends FunSuite {
 
-  test("Higher[List,Int]"){
+  test("Higher0[List]"){
+    assert(Higher0[List].describe === "Higher[List]")
+  }
+
+  test("Higher1[List,Int]"){
     assert(Higher1[List,Int].describe === "Higher[List, Int]")
   }
 
   test("Higher2[List, Int, Int]"){
     assert(Higher2[List,Int,Int].describe === "Higher2[List, Int, Int]")
+  }
+
+  test("Higher6[List,Int,Int,Int,Int,Int,Int]"){
+    assert(Higher6[List,Int,Int,Int,Int,Int,Int].describe === "Higher6[List, Int, Int, Int, Int, Int, Int]")
   }
 
   test("Triple[Int, Int, Int]"){
