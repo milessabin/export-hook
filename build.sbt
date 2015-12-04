@@ -138,9 +138,19 @@ lazy val mimaSettings = mimaDefaultSettings ++ Seq(
     // Filtering the methods that were added since the checked version
     // (these only break forward compatibility, not the backward one)
     Seq(
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl0"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl1"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl00"),
       exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl10"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl100"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl11"),
       exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl000"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl100"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImplAux"),
+      exclude[MissingMethodProblem]("export.ExportMacro.importImpl0"),
+      exclude[MissingMethodProblem]("export.ExportMacro.importImpl1"),
+      exclude[MissingMethodProblem]("export.ExportMacro.importImpl10"),
+      exclude[MissingMethodProblem]("export.ExportMacro.importImpl00"),
+      exclude[MissingMethodProblem]("export.ExportMacro.importImplAux"),
       exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl1"),
       exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl0"),
       exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl1"),
@@ -152,7 +162,8 @@ lazy val mimaSettings = mimaDefaultSettings ++ Seq(
       exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl00"),
       exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl1"),
       exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl00"),
-      exclude[MissingMethodProblem]("export.ExportMacro.exportsImplAux")
+      exclude[MissingMethodProblem]("export.ExportMacro.exportsImplAux"),
+      exclude[MissingMethodProblem]("export.ExportMacro.export$ExportMacro$$Resolved$1")
     )
   }
 )

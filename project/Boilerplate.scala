@@ -28,7 +28,7 @@ object Boilerplate {
 
 
   val testTemplates: Seq[Template] = Seq.empty
-  val codeTemplates: Seq[Template] = Seq(ExportsImpl)
+  val codeTemplates: Seq[Template] = Seq(ExportsImpl, ImportsImpl)
 
   def genTest(dir: File) = gen(dir)(testTemplates)
   def genCode(dir: File) = gen(dir)(codeTemplates)
@@ -44,29 +44,37 @@ object Boilerplate {
   }
 
   val maxArity = 6
+  val maxHk = 1
+  val maxDim = 2
 
-  final class TemplateVals(val arity: Int, prefix: String = "A") {
+  final class TemplateVals(val arity: Int, dimension: Int, hk: Int, prefix: String = "A") {
     private val a = prefix.toLowerCase
 
-    val synTypes = (0 until arity) map (n => s"$prefix$n")
-    val synVals = (0 until arity) map (n => s"$a$n")
-    val synTypedVals = (synVals zip synTypes) map { case (v, t) => v + ":" + t }
+    val `_.._` = Seq.fill(hk)("_").mkString(", ")
+    val synTypes = (0 until arity) map (n => if(n < dimension && hk > 0) s"$prefix$n[${`_.._`}]" else s"$prefix$n")
     val `A..N` = synTypes.mkString(", ")
-    val `a..n` = synVals.mkString(", ")
-    val `_.._` = Seq.fill(arity)("_").mkString(", ")
-    val `(A..N)` = if (arity == 1) s"Tuple1[$prefix]" else synTypes.mkString("(", ", ", ")")
-    val `(_.._)` = if (arity == 1) "Tuple1[_]" else Seq.fill(arity)("_").mkString("(", ", ", ")")
-    val `(a..n)` = if (arity == 1) s"Tuple1($a)" else synVals.mkString("(", ", ", ")")
-    val `a:A..n:N` = synTypedVals mkString ", "
+    val tcTags = (0 until arity) map (n => s"$a${n}Tag")
+    val synWeakTypes = synTypes map (st => s"WeakTypeTag[$st]")
+    val tcType = (0 until arity) map (n => if(n < dimension && hk > 0) s"_[${`_.._`}]" else "_") mkString("TC[", ",", "]")
+    val tcWeakType = (0 until arity) map (n => if(n < dimension && hk > 0) "Any" else "_") mkString("WeakTypeTag[TC[", ",", "]]")
+    val tcCode = (0 until arity) map (n => if(n < dimension) hk else 0) mkString ""
+    val tcTypeList = tcTags map (_ + ".tpe") mkString ("List(", ",", ")")
+    val tcImplicits = (tcTags zip synWeakTypes) map { case (tag, st) => s"$tag: $st" } mkString ","
   }
 
   trait Template {
     def filename(root: File): File
     def content(tv: TemplateVals): String
-    def range = 1 to maxArity
+    def range = 1 to maxArity   //controls arity of all the types
+    def dimension = 0 to maxDim //controls count of higher kinded types
+    def hk = 1 to maxHk         //controls the arity of the higher kinded types
     def body: String = {
       val headerLines = header split '\n'
-      val rawContents = range map { n => content(new TemplateVals(n)) split '\n' filterNot (_.isEmpty) }
+      val rawContents = for{
+        r <- range
+        d <- dimension if d <= r
+        k <- hk
+      } yield content(new TemplateVals(r, d, k)) split '\n' filterNot (_.isEmpty)        
       val preBody = rawContents.head takeWhile (_ startsWith "|") map (_.tail)
       val instances = rawContents flatMap {
         _ filter (_ startsWith "-") map (_.tail)
@@ -92,24 +100,6 @@ object Boilerplate {
     override def content(tv: TemplateVals): String = {
       import tv._
 
-      val tcTags = synVals map (_ + "Tag")
-
-      val tc0Code = List.fill(arity)("0") mkString ""
-      val tc0 = if(arity > 1) List.fill(arity)("_") mkString ("TC[", ",", "]") else "TC[_]"
-      val tc1Tpe = tcTags.map(_ + ".tpe") mkString ("List(", ",", ")")
-      val tc0Implicits = (tcTags zip synTypes) map {
-        case (tag, st) => s"$tag: WeakTypeTag[$st]"
-      } mkString ","
-
-      val tc1Code = List.fill(arity)("0").tail.mkString("1", "", "")
-      val tc1 = if(arity > 1) List.fill(arity)("_").tail.mkString("TC[_[_],", ",", "]") else "TC[_[_]]"
-      val tc1Types = ("HK[_]" :: synTypes.toList.tail).mkString(",")
-      val tc1Weak = if(arity > 1) List.fill(arity)("_").tail.mkString("TC[Any,", ",", "]") else "TC[Any]"
-      val tc1Implicits = (("hkTag", "HK[_]") :: (tcTags zip synTypes).toList.tail).map{
-        case (tag, st) => s"$tag: WeakTypeTag[$st]"
-      }.mkString(",")
-      val tc1TL = ("hkTag" :: tcTags.toList.tail).map(_ + ".tpe").mkString("List(", ",", ")")
-
       block"""
         |package export
         |
@@ -121,13 +111,9 @@ object Boilerplate {
         |class ExportsImplExpr(val c: whitebox.Context) {
         |  import c.universe._ 
         |
-        -  def exportsImpl$tc0Code[$tc0, ${`A..N`}, E[_]]
-        -    (implicit tcTag: WeakTypeTag[$tc0], $tc0Implicits, eTag: WeakTypeTag[E[_]]) =
-        -      exportsImplAux(tcTag.tpe.typeConstructor, $tc1Tpe, eTag.tpe)
-        -
-        -  def exportsImpl$tc1Code[$tc1, $tc1Types, E[_]]
-        -    (implicit tcTag: WeakTypeTag[$tc1Weak], $tc1Implicits, eTag: WeakTypeTag[E[_]]) =
-        -      exportsImplAux(tcTag.tpe.typeConstructor, $tc1TL, eTag.tpe)
+        -  def exportsImpl$tcCode[$tcType, ${`A..N`}, E[_]]
+        -    (implicit tcTag: $tcWeakType, $tcImplicits, eTag: WeakTypeTag[E[_]]): Tree =
+        -      exportsImplAux(tcTag.tpe.typeConstructor, $tcTypeList, eTag.tpe)
         -
         |  def exportsImplAux(tcTpe: Type, tTpes: List[Type], eTpe: Type): Tree = {
         |    val appTpe = appliedType(tcTpe, tTpes)
@@ -144,6 +130,68 @@ object Boilerplate {
         |    val exportTc = eTpe.typeConstructor
         |    val exportTpe = appliedType(exportTc, appliedType(tcTpe, tTpes))
         |    q"new $$exportTpe($$st)"
+        |  }
+        |}
+      """
+    }
+  }
+
+  object ImportsImpl extends Template{
+    override def filename(root: File): File = root / "export" / "importGen.scala"
+
+    override def content(tv: TemplateVals): String = {
+      import tv._
+
+      block"""
+        |package export
+        |
+        |import scala.language.experimental.macros
+        |import scala.reflect.macros.whitebox
+        |import macrocompat.bundle
+        |
+        |@bundle
+        |class ImportsImplExpr(val c: whitebox.Context) {
+        |  import c.universe._ 
+        |
+        |  val exportTcs =
+        |    List(
+        |     typeOf[Export0[_]].typeConstructor,
+        |     typeOf[Export1[_]].typeConstructor,
+        |     typeOf[Export2[_]].typeConstructor,
+        |     typeOf[Export3[_]].typeConstructor,
+        |     typeOf[Export4[_]].typeConstructor,
+        |     typeOf[Export5[_]].typeConstructor,
+        |     typeOf[Export6[_]].typeConstructor,
+        |     typeOf[Export7[_]].typeConstructor)
+        |
+        -  def importsImpl$tcCode[$tcType, ${`A..N`}](implicit tcTag: $tcWeakType, $tcImplicits): Tree =
+        -    importsImplAux(tcTag.tpe.typeConstructor, $tcTypeList)
+        -
+        |  def importsImplAux(fTpe: Type, tTpes: List[Type]): Tree = {
+        |    val instTpe = appliedType(fTpe, tTpes)
+        |      object Resolved {
+        |        def unapply(tc: Type): Option[Tree] = {
+        |          val appTpe = appliedType(tc, instTpe)
+        |          c.inferImplicitValue(appTpe, silent = true) match {
+        |            case EmptyTree => None
+        |            case t => Some(t)
+        |          }
+        |        }
+        |      }
+        |
+        |    val orderedTcs =
+        |      c.inferImplicitValue(typeOf[ExportPriority0], silent = true) match {
+        |        case EmptyTree => exportTcs
+        |        case t =>
+        |          val TypeRef(_, _, args) = t.tpe
+        |          args
+        |      }
+        |
+        |    val resolved = orderedTcs.collectFirst { case Resolved(t) => t }
+        |    resolved match {
+        |      case Some(exporter) => q"$$exporter.instance"
+        |      case None => c.abort(c.enclosingPosition, s"Unable to find export of type $$instTpe")
+        |    }
         |  }
         |}
       """

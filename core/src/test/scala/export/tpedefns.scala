@@ -83,11 +83,29 @@ object Higher5 extends LowerPriorityHigher5{
   }
 }
 
+@imports[Higher5]
 trait LowerPriorityHigher5
 
 trait Triple[A, B, C]{
   def describe: String
 }
+
+trait TwoHigher0[A[_], B[_]]{
+  def describe: String
+}
+
+@exports
+object TwoHigher0 extends LowPriorityTwoHigher0 {
+  def apply[A[_], B[_]](implicit h: TwoHigher0[A, B]) = h
+
+  @export
+  implicit def ll = new TwoHigher0[List, List]{
+    def describe = "TwoHigher0[List, List]"
+  }
+}
+
+@imports[TwoHigher0]
+trait LowPriorityTwoHigher0
 
 @exports
 object Triple extends LowerPriorityTriple{
@@ -97,13 +115,22 @@ object Triple extends LowerPriorityTriple{
   implicit def iii = new Triple[Int, Int, Int]{
     def describe: String = "Triple[Int, Int, Int]"
   }
+
+  @export
+  implicit val ddd = new Triple[Double, Double, Double]{
+    def describe: String = "Triple[Double, Double, Double]"
+  }
+
+  @export
+  implicit object TC extends Triple[Char, Char, Char]{
+    def describe: String = "Triple[Char, Char, Char]"
+  }
 }
 
 @imports[Triple]
 trait LowerPriorityTriple
 
 class TypeTests extends FunSuite {
-
   test("Higher0[List]"){
     assert(Higher0[List].describe === "Higher[List]")
   }
@@ -120,7 +147,19 @@ class TypeTests extends FunSuite {
     assert(Higher5[List,Int,Int,Int,Int,Int].describe === "Higher5[List, Int, Int, Int, Int, Int]")
   }
 
+  test("TwoHigher0[List, List]"){
+    assert(TwoHigher0[List, List]. describe === "TwoHigher0[List, List]")
+  }
+
   test("Triple[Int, Int, Int]"){
     assert(Triple[Int,Int,Int].describe === "Triple[Int, Int, Int]")
+  }
+
+  test("Triple[Double, Double, Double]"){
+    assert(Triple[Double, Double, Double].describe === "Triple[Double, Double, Double]")
+  }
+
+  test("Triple[Char, Char, Char]"){
+    assert(Triple[Char, Char, Char].describe === "Triple[Char, Char, Char]")
   }
 }

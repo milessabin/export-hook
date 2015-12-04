@@ -117,20 +117,32 @@ class ExportMacro(val c: whitebox.Context) {
     val tcRef = mkAttributedRef(tcTpe)
 
     val kind = tcTpe.typeParams.map(_.asType.typeParams.length)
-    if(kind.exists(_ > 1) || kind.size > 6)
-          c.abort(c.enclosingPosition, s"$tcTpe has an unsupported kind")
     val suffix = kind.mkString("")
     val f = TypeName(c.freshName)
-    val fd = {
-      val ns = kind.map{ _ => TypeName(c.freshName) }
-      val itpe = (kind zip ns).map{ 
-        case (n, x) =>
-          val wilds = List.fill(n)(TypeDef(Modifiers(Flag.PARAM), typeNames.WILDCARD, List(), TypeBoundsTree(EmptyTree, EmptyTree)))
-          TypeDef(Modifiers(Flag.PARAM), x, wilds, TypeBoundsTree(EmptyTree, EmptyTree))
+    val fd ={
+      val u = TypeName(c.freshName)
+      val v = TypeName(c.freshName)
+      val w = TypeName(c.freshName)
+      val x = TypeName(c.freshName)
+      val y = TypeName(c.freshName)
+      val z = TypeName(c.freshName)
+      kind match {
+        case List(0) => q"type $f[$x] >: $tcRef[$x]"
+        case List(1) => q"type $f[$x[_]] >: $tcRef[$x]"
+        case List(0, 0) => q"type $f[$x, $y] >: $tcRef[$x, $y]"
+        case List(1, 0) => q"type $f[$x[_], $y] >: $tcRef[$x, $y]"
+        case List(1, 1) => q"type $f[$x[_], $y[_]] >: $tcRef[$x, $y]"
+        case List(0, 0, 0) => q"type $f[$x, $y, $z] >: $tcRef[$x, $y, $z]"
+        case List(1, 0, 0) => q"type $f[$x[_], $y, $z] >: $tcRef[$x, $y, $z]"
+        case List(0, 0, 0, 0) => q"type $f[$w, $x, $y, $z] >: $tcRef[$w, $x, $y, $z]"
+        case List(1, 0, 0, 0) => q"type $f[$w[_], $x, $y, $z] >: $tcRef[$w, $x, $y, $z]"
+        case List(0, 0, 0, 0, 0) => q"type $f[$v, $w, $x, $y, $z] >: $tcRef[$v, $w, $x, $y, $z]"
+        case List(1, 0, 0, 0, 0) => q"type $f[$v[_], $w, $x, $y, $z] >: $tcRef[$v, $w, $x, $y, $z]"
+        case List(0, 0, 0, 0, 0, 0) => q"type $f[$u, $v, $w, $x, $y, $z] >: $tcRef[$u, $v, $w, $x, $y, $z]"
+        case List(1, 0, 0, 0, 0, 0) => q"type $f[$u[_], $v, $w, $x, $y, $z] >: $tcRef[$u, $v, $w, $x, $y, $z]"
+        case _ =>
+          c.abort(c.enclosingPosition, s"$tcTpe has an unsupported kind")
       }
-      val bounds = TypeBoundsTree(AppliedTypeTree(tcRef, ns.map(Ident(_))), EmptyTree)
-
-      TypeDef(Modifiers(Flag.DEFERRED), f, itpe, bounds)
     }
 
     val (ts: List[TypeName], tds: List[Tree]) = (kind.map { k =>
@@ -378,18 +390,10 @@ class ExportMacro(val c: whitebox.Context) {
     val tcTpe = c.typecheck(tc, c.TYPEmode).tpe.typeConstructor
     val tcRef = mkAttributedRef(tcTpe)
     val kind = tcTpe.typeParams.map(_.asType.typeParams.length)
-    val suffix =
-      kind match {
-        case List(0) => "0"
-        case List(1) => "1"
-        case List(0, 0) => "00"
-        case List(1, 0) => "10"
-        case List(0, 0, 0) => "000"
-        case List(1, 0, 0) => "100"
-        case _ =>
-          c.abort(c.enclosingPosition, s"$tc has an unsupported kind")
-      }
+    if(kind.exists(_ > 1) || kind.size > 6)
+      c.abort(c.enclosingPosition, s"$tc has an unsupported kind")
 
+    val suffix = kind.mkString("")
     val prefix = c.internal.enclosingOwner.fullName.replace('.', '$')+"$"
 
     val (ts: List[TypeName], tds: List[Tree]) = (kind.map { k =>
@@ -397,7 +401,7 @@ class ExportMacro(val c: whitebox.Context) {
       (t, if(k == 0) q"type $t" else q"type $t[_]")
     }).unzip
 
-    val importImpl = TermName(s"importImpl$suffix")
+    val importImpl = TermName(s"importsImpl$suffix")
 
     annottees match {
       case List(ClassDef(mods, typeName, List(), impl)) =>
@@ -409,7 +413,7 @@ class ExportMacro(val c: whitebox.Context) {
         q"""
           $mods trait $typeName extends $termName.$lpName {
             import scala.language.experimental.macros
-            implicit def $methName[..$tds]: $tcRef[..$ts] = macro _root_.export.ExportMacro.$importImpl[$tcRef, ..$ts]
+            implicit def $methName[..$tds]: $tcRef[..$ts] = macro _root_.export.ImportsImplExpr.$importImpl[$tcRef, ..$ts]
           }
           object $termName {
             $lpClass
@@ -422,7 +426,7 @@ class ExportMacro(val c: whitebox.Context) {
         q"""
           $mods object $termName extends ..$parents { $self =>
             import scala.language.experimental.macros
-            implicit def $methName[..$tds]: $tcRef[..$ts] = macro _root_.export.ExportMacro.$importImpl[$tcRef, ..$ts]
+            implicit def $methName[..$tds]: $tcRef[..$ts] = macro _root_.export.ImportsImplExpr.$importImpl[$tcRef, ..$ts]
 
             ..$body
           }
@@ -433,56 +437,6 @@ class ExportMacro(val c: whitebox.Context) {
 
       case other =>
         c.abort(c.enclosingPosition, "Unexpected tree shape.")
-    }
-  }
-
-  def importImpl0[F[_], T](implicit fTag: WeakTypeTag[F[_]], tTag: WeakTypeTag[T]): Tree =
-    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe))
-
-  def importImpl1[F[_[_]], T[_]](implicit fTag: WeakTypeTag[F[Any]], tTag: WeakTypeTag[T[_]]): Tree =
-    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe))
-
-  def importImpl00[F[_, _], T, U](implicit fTag: WeakTypeTag[F[_, _]], tTag: WeakTypeTag[T], uTag: WeakTypeTag[U]): Tree =
-    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe))
-
-  def importImpl10[F[_[_], _], T[_], U]
-    (implicit fTag: WeakTypeTag[F[Any, _]], tTag: WeakTypeTag[T[_]], uTag: WeakTypeTag[U]): Tree =
-    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe))
-
-  def importImpl000[F[_, _, _], T, U, V]
-    (implicit fTag: WeakTypeTag[F[_, _, _]], tTag: WeakTypeTag[T], uTag: WeakTypeTag[U], vTag: WeakTypeTag[V]): Tree =
-    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe, vTag.tpe))
-
-  def importImpl100[F[_[_], _, _], T[_], U, V]
-    (implicit fTag: WeakTypeTag[F[Any, _, _]], tTag: WeakTypeTag[T[_]], uTag: WeakTypeTag[U], vTag: WeakTypeTag[V]): Tree =
-    importImplAux(fTag.tpe.typeConstructor, List(tTag.tpe, uTag.tpe, vTag.tpe))
-
-  def importImplAux(fTpe: Type, tTpes: List[Type]): Tree = {
-    val instTpe = appliedType(fTpe, tTpes)
-    object Resolved {
-      def unapply(tc: Type): Option[Tree] = {
-        val appTpe = appliedType(tc, instTpe)
-        c.inferImplicitValue(appTpe, silent = true) match {
-          case EmptyTree => None
-          case t => Some(t)
-        }
-      }
-    }
-
-    val orderedTcs =
-      c.inferImplicitValue(typeOf[ExportPriority0], silent = true) match {
-        case EmptyTree => exportTcs
-        case t =>
-          val TypeRef(_, _, args) = t.tpe
-          args
-      }
-
-    val resolved = orderedTcs.collectFirst { case Resolved(t) => t }
-    resolved match {
-      case Some(exporter) =>
-        q"""$exporter.instance"""
-      case None =>
-        c.abort(c.enclosingPosition, s"Unable to find export of type $instTpe")
     }
   }
 }
