@@ -440,3 +440,74 @@ class ExportMacro(val c: whitebox.Context) {
     }
   }
 }
+
+@bundle
+trait ImportAux{
+  val c: whitebox.Context
+  import c.universe._
+
+  lazy val exportTcs =
+    List(
+      typeOf[Export0[_]].typeConstructor,
+      typeOf[Export1[_]].typeConstructor,
+      typeOf[Export2[_]].typeConstructor,
+      typeOf[Export3[_]].typeConstructor,
+      typeOf[Export4[_]].typeConstructor,
+      typeOf[Export5[_]].typeConstructor,
+      typeOf[Export6[_]].typeConstructor,
+      typeOf[Export7[_]].typeConstructor
+    )
+
+  def importImplAux(fTpe: Type, tTpes: List[Type]): Tree = {
+    val instTpe = appliedType(fTpe, tTpes)
+    object Resolved {
+      def unapply(tc: Type): Option[Tree] = {
+        val appTpe = appliedType(tc, instTpe)
+        c.inferImplicitValue(appTpe, silent = true) match {
+          case EmptyTree => None
+          case t => Some(t)
+        }
+      }
+    }
+
+    val orderedTcs =
+      c.inferImplicitValue(typeOf[ExportPriority0], silent = true) match {
+        case EmptyTree => exportTcs
+        case t =>
+          val TypeRef(_, _, args) = t.tpe
+          args
+      }
+
+    val resolved = orderedTcs.collectFirst { case Resolved(t) => t }
+    resolved match {
+      case Some(exporter) =>
+        q"""$exporter.instance"""
+      case None =>
+        c.abort(c.enclosingPosition, s"Unable to find export of type $instTpe")
+    }
+  }
+}
+
+@bundle
+trait ExportAux{
+  val c: whitebox.Context
+  import c.universe._
+
+  def exportsImplAux(tcTpe: Type, tTpes: List[Type], eTpe: Type): Tree = {
+    val appTpe = appliedType(tcTpe, tTpes)
+    val st =
+      c.typecheck(q"_root_.shapeless.lazily[$appTpe]", silent = true) match {
+        case EmptyTree =>
+          c.typecheck(q"_root_.scala.Predef.implicitly[$appTpe]", silent = true) match {
+            case EmptyTree =>
+              c.abort(c.enclosingPosition, s"Unable to infer value of type $appTpe")
+            case t => t
+          }
+        case t => t
+      }
+
+    val exportTc = eTpe.typeConstructor
+    val exportTpe = appliedType(exportTc, appliedType(tcTpe, tTpes))
+    q"""new $exportTpe($st)"""
+  }
+}
