@@ -11,7 +11,8 @@ import com.typesafe.tools.mima.core.ProblemFilters._
 lazy val buildSettings = Seq(
   organization := "org.typelevel",
   scalaVersion := "2.11.7",
-  crossScalaVersions := Seq("2.10.6", "2.11.7")
+  crossScalaVersions := Seq("2.10.6", "2.11.7"),
+  sourceGenerators in Compile <+= (sourceManaged in Compile).map(Boilerplate.genCode)
 )
 
 lazy val commonSettings = Seq(
@@ -137,12 +138,32 @@ lazy val mimaSettings = mimaDefaultSettings ++ Seq(
     // Filtering the methods that were added since the checked version
     // (these only break forward compatibility, not the backward one)
     Seq(
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl10"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl000"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl100"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl0"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl1"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl00"),
       exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl10"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl11"),
       exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl000"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl100")
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl100"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImplAux"),
+      exclude[MissingMethodProblem]("export.ExportMacro.importImpl0"),
+      exclude[MissingMethodProblem]("export.ExportMacro.importImpl1"),
+      exclude[MissingMethodProblem]("export.ExportMacro.importImpl10"),
+      exclude[MissingMethodProblem]("export.ExportMacro.importImpl00"),
+      exclude[MissingMethodProblem]("export.ExportMacro.importImplAux"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl1"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl0"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl1"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl00"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl10"),
+      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImplAux"),
+      exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl1"),
+      exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl0"),
+      exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl00"),
+      exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl1"),
+      exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl00"),
+      exclude[MissingMethodProblem]("export.ExportMacro.exportsImplAux"),
+      exclude[MissingMethodProblem]("export.ExportMacro.export$ExportMacro$$Resolved$1")
     )
   }
 )
