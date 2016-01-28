@@ -404,6 +404,7 @@ channels (Gitter, github, etc.) to be welcoming environments for everyone.
 
 + [circe][circe]
 + [kittens][kittens]
++ [tabulate][tabulate]
 
 ## Contributors
 
@@ -428,3 +429,4 @@ channels (Gitter, github, etc.) to be welcoming environments for everyone.
 [circe]: https://github.com/travisbrown/circe
 [kittens]: https://github.com/milessabin/kittens
 [mima]: https://github.com/typesafehub/migration-manager
+[tabulate]: https://github.com/nrinaudo/tabulate
