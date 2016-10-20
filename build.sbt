@@ -134,41 +134,12 @@ lazy val publishSettings = Seq(
 )
 
 lazy val mimaSettings = mimaDefaultSettings ++ Seq(
-  mimaPreviousArtifacts := {
-    if(scalaVersion.value == "2.12.0-RC2") Set()
-    else Set(organization.value %% moduleName.value % "1.1.0")
-  },
+  mimaPreviousArtifacts := { Set() },
 
   mimaBinaryIssueFilters ++= {
     // Filtering the methods that were added since the checked version
     // (these only break forward compatibility, not the backward one)
     Seq(
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl0"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl1"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl00"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl10"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl11"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl000"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImpl100"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.importImplAux"),
-      exclude[MissingMethodProblem]("export.ExportMacro.importImpl0"),
-      exclude[MissingMethodProblem]("export.ExportMacro.importImpl1"),
-      exclude[MissingMethodProblem]("export.ExportMacro.importImpl10"),
-      exclude[MissingMethodProblem]("export.ExportMacro.importImpl00"),
-      exclude[MissingMethodProblem]("export.ExportMacro.importImplAux"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl1"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl0"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl1"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl00"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImpl10"),
-      exclude[MissingMethodProblem]("export.ExportMacro#Stub.exportsImplAux"),
-      exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl1"),
-      exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl0"),
-      exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl00"),
-      exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl1"),
-      exclude[MissingMethodProblem]("export.ExportMacro.exportsImpl00"),
-      exclude[MissingMethodProblem]("export.ExportMacro.exportsImplAux"),
-      exclude[MissingMethodProblem]("export.ExportMacro.export$ExportMacro$$Resolved$1")
     )
   }
 )
