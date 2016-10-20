@@ -73,7 +73,7 @@ lazy val core = crossProject.crossType(CrossType.Pure)
 lazy val coreJVM = core.jvm
 lazy val coreJS = core.js
 
-addCommandAlias("validate", ";root;compile;mima-report-binary-issues;test")
+addCommandAlias("validate", ";root;compile;mimaReportBinaryIssues;test")
 addCommandAlias("release-all", ";root;release")
 addCommandAlias("js", ";project coreJS")
 addCommandAlias("jvm", ";project coreJVM")
