@@ -364,25 +364,25 @@ resolvers ++= Seq(
 ```
 
 Builds are available for Scala 2.11.x and 2.10.x for Scala JDK and Scala.js.  The main line of development for
-export-hook 1.1.0 is Scala 2.11.7 supported via the macro paradise compiler plugin.
+export-hook 1.1.0 is Scala 2.11.8 supported via the macro paradise compiler plugin.
 
 ```scala
-scalaVersion := "2.11.7"
+scalaVersion := "2.11.8"
 
 libraryDependencies ++= Seq(
   "org.typelevel" %% "export-hook" % "1.1.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
-  compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
+  compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
 )
 ```
 
-export-hook requires SBT 0.13.9 or later, and will cause a `NullPointerException` to be thrown at compile time for
-earlier versions (see issue [#13](https://github.com/milessabin/export-hook/issues/13)).
+export-hook requires SBT 0.13.13-RC3 or later, and will cause a `NullPointerException` to be thrown at compile time
+for earlier versions (see issue [#13](https://github.com/milessabin/export-hook/issues/13)).
 
 The SBT version can be configured in `/project/build.properties`:
 
 ```scala
-sbt.version=0.13.9
+sbt.version=0.13.13-RC3
 ```
 
 
@@ -393,7 +393,7 @@ is binary compatible within minor versions from 1.1.0 onwards.
 
 ## Building export-hook
 
-export-hook is built with SBT 0.13.9 or later, and its master branch is built with Scala 2.11.7 by default.
+export-hook is built with SBT 0.13.13-RC3 or later, and its master branch is built with Scala 2.11.8 by default.
 
 ## Participation
 

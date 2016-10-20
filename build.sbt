@@ -4,18 +4,20 @@ import ReleaseTransformations._
 
 import com.typesafe.tools.mima.plugin.MimaPlugin.mimaDefaultSettings
 import com.typesafe.tools.mima.plugin.MimaKeys
-import MimaKeys.{previousArtifact, binaryIssueFilters}
+import MimaKeys.{mimaPreviousArtifacts, mimaBinaryIssueFilters}
 import com.typesafe.tools.mima.core._
 import com.typesafe.tools.mima.core.ProblemFilters._
 
 lazy val buildSettings = Seq(
   organization := "org.typelevel",
-  scalaVersion := "2.11.7",
-  crossScalaVersions := Seq("2.10.6", "2.11.7"),
-  sourceGenerators in Compile <+= (sourceManaged in Compile).map(Boilerplate.genCode)
+  scalaVersion := "2.11.8",
+  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0-RC2"),
+  sourceGenerators in Compile += Def.task(Boilerplate.genCode((sourceManaged in Compile).value)).taskValue
 )
 
 lazy val commonSettings = Seq(
+  incOptions := incOptions.value.withLogRecompileOnMacro(false),
+
   scalacOptions := Seq(
     "-feature",
     "-language:higherKinds",
@@ -28,13 +30,13 @@ lazy val commonSettings = Seq(
     "bintray/non" at "http://dl.bintray.com/non/maven"
   ),
   libraryDependencies ++= Seq(
-    "org.typelevel"        %%% "macro-compat"  % "1.1.0",
-    "com.chuusai"          %%% "shapeless"     % "2.2.5"    % "test",
-    "com.github.mpilquist" %%% "simulacrum"    % "0.5.0"    % "test",
-    "org.scalatest"        %%% "scalatest"     % "3.0.0-M7" % "test",
-    "org.scalacheck"       %%% "scalacheck"    % "1.12.4"   % "test",
+    "org.typelevel"        %%% "macro-compat"  % "1.1.1",
+    "com.chuusai"          %%% "shapeless"     % "2.3.2"  % "test",
+    "com.github.mpilquist" %%% "simulacrum"    % "0.10.0" % "test",
+    "org.scalatest"        %%% "scalatest"     % "3.0.0"  % "test",
+    "org.scalacheck"       %%% "scalacheck"    % "1.13.3" % "test",
 
-    compilerPlugin("org.spire-math" %% "kind-projector" % "0.5.4")
+    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.2")
   ),
 
   scmInfo :=
@@ -81,7 +83,7 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
-    compilerPlugin("org.scalamacros" % "paradise" % "2.1.0-M5" cross CrossVersion.full)
+    compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
   ),
   libraryDependencies ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
@@ -90,7 +92,7 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
       // in Scala 2.10, quasiquotes are provided by macro paradise
       case Some((2, 10)) =>
         Seq(
-          "org.scalamacros" %% "quasiquotes" % "2.1.0-M5" cross CrossVersion.binary
+          "org.scalamacros" %% "quasiquotes" % "2.1.0" cross CrossVersion.binary
         )
     }
   }
@@ -113,9 +115,9 @@ lazy val publishSettings = Seq(
   publishMavenStyle := true,
   publishArtifact in Test := false,
   pomIncludeRepository := { _ => false },
-  publishTo <<= version { (v: String) =>
+  publishTo := {
     val nexus = "https://oss.sonatype.org/"
-    if (v.trim.endsWith("SNAPSHOT"))
+    if (version.value.trim.endsWith("SNAPSHOT"))
       Some("snapshots" at nexus + "content/repositories/snapshots")
     else
       Some("releases"  at nexus + "service/local/staging/deploy/maven2")
@@ -132,9 +134,12 @@ lazy val publishSettings = Seq(
 )
 
 lazy val mimaSettings = mimaDefaultSettings ++ Seq(
-  previousArtifact := Some(organization.value %% moduleName.value % "1.1.0"),
+  mimaPreviousArtifacts := {
+    if(scalaVersion.value == "2.12.0-RC2") Set()
+    else Set(organization.value %% moduleName.value % "1.1.0")
+  },
 
-  binaryIssueFilters ++= {
+  mimaBinaryIssueFilters ++= {
     // Filtering the methods that were added since the checked version
     // (these only break forward compatibility, not the backward one)
     Seq(
