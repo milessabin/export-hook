@@ -10,8 +10,8 @@ import com.typesafe.tools.mima.core.ProblemFilters._
 
 lazy val buildSettings = Seq(
   organization := "org.typelevel",
-  scalaVersion := "2.11.8",
-  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0-RC2"),
+  scalaVersion := "2.12.0",
+  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0"),
   sourceGenerators in Compile += Def.task(Boilerplate.genCode((sourceManaged in Compile).value)).taskValue
 )
 
@@ -34,9 +34,9 @@ lazy val commonSettings = Seq(
     "com.chuusai"          %%% "shapeless"     % "2.3.2"  % "test",
     "com.github.mpilquist" %%% "simulacrum"    % "0.10.0" % "test",
     "org.scalatest"        %%% "scalatest"     % "3.0.0"  % "test",
-    "org.scalacheck"       %%% "scalacheck"    % "1.13.3" % "test",
+    "org.scalacheck"       %%% "scalacheck"    % "1.13.4" % "test",
 
-    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.2")
+    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.3")
   ),
 
   scmInfo :=
@@ -83,7 +83,7 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
-    compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.full)
+    compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch)
   ),
   libraryDependencies ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
