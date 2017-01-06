@@ -10,8 +10,8 @@ import com.typesafe.tools.mima.core.ProblemFilters._
 
 lazy val buildSettings = Seq(
   organization := "org.typelevel",
-  scalaVersion := "2.12.0",
-  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.0"),
+  scalaVersion := "2.12.1",
+  crossScalaVersions := Seq("2.10.6", "2.11.8", "2.12.1"),
   sourceGenerators in Compile += Def.task(Boilerplate.genCode((sourceManaged in Compile).value)).taskValue
 )
 
