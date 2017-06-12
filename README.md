@@ -23,8 +23,8 @@ first approximation the types associated with `T` are all the types that are men
 implicit scope of `Functor[List]` includes the companion object of `Functor` and the companion object of `List`. The
 full set of rules is more complicated and can be found in [section 7.2][sls-7.2] of the Scala Language Reference.
 
-When the compiler is resolving an implicit parameter it will first look for defintions using strategy (1) above:
-implicit defintions which are directly accessible in the current or an enclosing scope, or via an import will be
+When the compiler is resolving an implicit parameter it will first look for definitions using strategy (1) above:
+implicit definitions which are directly accessible in the current or an enclosing scope, or via an import will be
 consulted first and selected according to the [normal overload resolution rules][sls-6.26.3].
 
 The compiler will _only_ use strategy (2), searching the implicit scope, if no suitable implicit definitions are found
