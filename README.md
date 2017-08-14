@@ -367,10 +367,10 @@ Builds are available for Scala 2.12.x, 2.11.x and 2.10.x for Scala JDK and Scala
 export-hook 1.1.0 is Scala 2.12.0 supported via the macro paradise compiler plugin.
 
 ```scala
-scalaVersion := "2.12.0"
+scalaVersion in ThisBuild := "2.12.3"
 
 libraryDependencies ++= Seq(
-  "org.typelevel" %% "export-hook" % "1.1.0",
+  "org.typelevel" %% "export-hook" % "1.2.0",
   "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
   compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch)
 )
@@ -382,7 +382,7 @@ for earlier versions (see issue [#13](https://github.com/milessabin/export-hook/
 The SBT version can be configured in `/project/build.properties`:
 
 ```scala
-sbt.version=0.13.13
+sbt.version=0.13.16
 ```
 
 
