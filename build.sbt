@@ -58,8 +58,7 @@ lazy val commonJvmSettings = Seq(
 def macroDependencies(scalaVersion: String) =
   CrossVersion.partialVersion(scalaVersion) match {
     case Some((2, minor)) if minor < 13 => Seq(
-      compilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.patch)
-    )
+      compilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.patch))
     case _ => Seq()
   }
 
@@ -90,7 +89,7 @@ addCommandAlias("root", ";project root")
 lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
   ) ++ macroDependencies(scalaVersion.value),
   libraryDependencies ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
