@@ -32,11 +32,11 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel"        %%% "macro-compat"  % "1.1.1",
     "com.chuusai"          %%% "shapeless"     % "2.3.3"  % "test",
-    "com.github.mpilquist" %%% "simulacrum"    % "0.12.0" % "test",
-    "org.scalatest"        %%% "scalatest"     % "3.0.5-M1"  % "test",
-    "org.scalacheck"       %%% "scalacheck"    % "1.13.5" % "test",
+    "com.github.mpilquist" %%% "simulacrum"    % "0.13.0" % "test",
+    "org.scalatest"        %%% "scalatest"     % "3.0.6-SNAP1"  % "test",
+    "org.scalacheck"       %%% "scalacheck"    % "1.14.0" % "test",
 
-    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
+    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.7")
   ),
 
   scmInfo :=
@@ -54,6 +54,14 @@ lazy val commonJsSettings = Seq(
 lazy val commonJvmSettings = Seq(
   parallelExecution in Test := false
 )
+
+def macroDependencies(scalaVersion: String) =
+  CrossVersion.partialVersion(scalaVersion) match {
+    case Some((2, minor)) if minor < 13 => Seq(
+      compilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.patch)
+    )
+    case _ => Seq()
+  }
 
 lazy val coreSettings = buildSettings ++ commonSettings ++ publishSettings
 
@@ -83,8 +91,7 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
-    compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch)
-  ),
+  ) ++ macroDependencies(scalaVersion.value),
   libraryDependencies ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
       // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
