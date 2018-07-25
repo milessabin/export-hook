@@ -89,7 +89,7 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
-  ) ++ (if(priorTo2_13(scalaVersion.value) Seq(
+  ) ++ (if(priorTo2_13(scalaVersion.value)) Seq(
     compilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.patch)) else Nil),
   libraryDependencies ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
