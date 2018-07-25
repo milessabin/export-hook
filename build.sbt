@@ -15,6 +15,12 @@ lazy val buildSettings = Seq(
   sourceGenerators in Compile += Def.task(Boilerplate.genCode((sourceManaged in Compile).value)).taskValue
 )
 
+def priorTo2_13(scalaVersion: String): Boolean =
+  CrossVersion.partialVersion(scalaVersion) match {
+    case Some((2, minor)) if minor < 13 => true
+    case _ => false
+  }
+
 lazy val commonSettings = Seq(
   incOptions := incOptions.value.withLogRecompileOnMacro(false),
 
@@ -23,7 +29,7 @@ lazy val commonSettings = Seq(
     "-language:higherKinds",
     "-language:implicitConversions",
     "-unchecked"
-  ),
+  ) ++ (if(!priorTo2_13(scalaVersion.value)) Seq("-Ymacro-annotations") else Nil),
   resolvers ++= Seq(
     Resolver.sonatypeRepo("releases"),
     Resolver.sonatypeRepo("snapshots"),
