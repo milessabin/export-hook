@@ -61,13 +61,6 @@ lazy val commonJvmSettings = Seq(
   parallelExecution in Test := false
 )
 
-def macroDependencies(scalaVersion: String) =
-  CrossVersion.partialVersion(scalaVersion) match {
-    case Some((2, minor)) if minor < 13 => Seq(
-      compilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.patch))
-    case _ => Seq()
-  }
-
 lazy val coreSettings = buildSettings ++ commonSettings ++ publishSettings
 
 lazy val root = project.in(file("."))
@@ -96,7 +89,8 @@ lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
     "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
-  ) ++ macroDependencies(scalaVersion.value),
+  ) ++ (if(priorTo2_13(scalaVersion.value) Seq(
+    compilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.patch)) else Nil),
   libraryDependencies ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
       // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
