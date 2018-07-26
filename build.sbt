@@ -11,9 +11,15 @@ import com.typesafe.tools.mima.core.ProblemFilters._
 lazy val buildSettings = Seq(
   organization := "org.typelevel",
   scalaVersion := "2.12.4",
-  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.4", "2.13.0-M3"),
+  crossScalaVersions := Seq("2.10.7", "2.11.12", "2.12.6", "2.13.0-M4"),
   sourceGenerators in Compile += Def.task(Boilerplate.genCode((sourceManaged in Compile).value)).taskValue
 )
+
+def priorTo2_13(scalaVersion: String): Boolean =
+  CrossVersion.partialVersion(scalaVersion) match {
+    case Some((2, minor)) if minor < 13 => true
+    case _ => false
+  }
 
 lazy val commonSettings = Seq(
   incOptions := incOptions.value.withLogRecompileOnMacro(false),
@@ -23,7 +29,7 @@ lazy val commonSettings = Seq(
     "-language:higherKinds",
     "-language:implicitConversions",
     "-unchecked"
-  ),
+  ) ++ (if(!priorTo2_13(scalaVersion.value)) Seq("-Ymacro-annotations") else Nil),
   resolvers ++= Seq(
     Resolver.sonatypeRepo("releases"),
     Resolver.sonatypeRepo("snapshots"),
@@ -32,11 +38,11 @@ lazy val commonSettings = Seq(
   libraryDependencies ++= Seq(
     "org.typelevel"        %%% "macro-compat"  % "1.1.1",
     "com.chuusai"          %%% "shapeless"     % "2.3.3"  % "test",
-    "com.github.mpilquist" %%% "simulacrum"    % "0.12.0" % "test",
-    "org.scalatest"        %%% "scalatest"     % "3.0.5-M1"  % "test",
-    "org.scalacheck"       %%% "scalacheck"    % "1.13.5" % "test",
+    "com.github.mpilquist" %%% "simulacrum"    % "0.13.0" % "test",
+    "org.scalatest"        %%% "scalatest"     % "3.0.6-SNAP1"  % "test",
+    "org.scalacheck"       %%% "scalacheck"    % "1.14.0" % "test",
 
-    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.6")
+    compilerPlugin("org.spire-math" %% "kind-projector" % "0.9.7")
   ),
 
   scmInfo :=
@@ -82,9 +88,9 @@ addCommandAlias("root", ";project root")
 lazy val scalaMacroDependencies: Seq[Setting[_]] = Seq(
   libraryDependencies ++= Seq(
     "org.scala-lang" % "scala-compiler" % scalaVersion.value % "provided",
-    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided",
-    compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch)
-  ),
+    "org.scala-lang" % "scala-reflect" % scalaVersion.value % "provided"
+  ) ++ (if(priorTo2_13(scalaVersion.value)) Seq(
+    compilerPlugin("org.scalamacros" %% "paradise" % "2.1.0" cross CrossVersion.patch)) else Nil),
   libraryDependencies ++= {
     CrossVersion.partialVersion(scalaVersion.value) match {
       // if scala 2.11+ is used, quasiquotes are merged into scala-reflect
