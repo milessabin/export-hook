@@ -397,8 +397,10 @@ export-hook is built with SBT 0.13.13 or later, and its master branch is built w
 
 ## Participation
 
-The export-hook project supports the [Typelevel][typelevel] [code of conduct][codeofconduct] and wants all of its
+The export-hook project supports the [Scala Code of Conduct][codeofconduct] and wants all of its
 channels (Gitter, github, etc.) to be welcoming environments for everyone.
+
+[codeofconduct]: https://www.scala-lang.org/conduct/
 
 ## Projects using export-hook
 
@@ -423,7 +425,6 @@ channels (Gitter, github, etc.) to be welcoming environments for everyone.
 [shapeless-gitter]: https://gitter.im/milessabin/shapeless
 [cats-gitter]: https://gitter.im/non/cats
 [typelevel]: http://typelevel.org/
-[codeofconduct]: http://typelevel.org/conduct.html
 [sonatype]: https://oss.sonatype.org/index.html#nexus-search;quick~export-hook
 [ci]: https://travis-ci.org/milessabin/export-hook
 [circe]: https://github.com/travisbrown/circe
